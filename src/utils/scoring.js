@@ -1,11 +1,12 @@
 import { northStarTargets, getTierForScore } from '../data/northStar';
 
 const LEVEL_WEIGHTS = {
-  1: 0.15, // AI Awareness
-  2: 0.25, // Current Usage
-  3: 0.25, // Skill Depth
-  4: 0.20, // Strategic Thinking
-  5: 0.15, // Future Readiness
+  1: 0.12, // AI Awareness
+  2: 0.20, // Current Usage
+  3: 0.20, // Skill Depth
+  4: 0.18, // Strategic Thinking
+  5: 0.12, // Future Readiness
+  6: 0.18, // Technical Fluency
 };
 
 const LEVEL_NAMES = {
@@ -14,6 +15,7 @@ const LEVEL_NAMES = {
   3: 'skillDepth',
   4: 'strategicThinking',
   5: 'futureReadiness',
+  6: 'technicalFluency',
 };
 
 export function calculateLevelScore(responses) {
@@ -25,7 +27,7 @@ export function calculateLevelScore(responses) {
 
 export function calculateOverallScore(levelScores) {
   let weighted = 0;
-  for (let level = 1; level <= 5; level++) {
+  for (let level = 1; level <= 6; level++) {
     const key = LEVEL_NAMES[level];
     const score = levelScores[key] || 0;
     weighted += score * LEVEL_WEIGHTS[level];
@@ -35,12 +37,12 @@ export function calculateOverallScore(levelScores) {
 
 export function calculateScoresFromResponses(allResponses) {
   const byLevel = {};
-  for (let i = 1; i <= 5; i++) {
+  for (let i = 1; i <= 6; i++) {
     byLevel[i] = allResponses.filter(r => r.level === i);
   }
 
   const levelScores = {};
-  for (let level = 1; level <= 5; level++) {
+  for (let level = 1; level <= 6; level++) {
     levelScores[LEVEL_NAMES[level]] = calculateLevelScore(byLevel[level]);
   }
 
@@ -73,6 +75,7 @@ export function calculateBadges(levelScores) {
   if (levelScores.skillDepth >= 50) badges.push({ id: 'practitioner', name: 'AI Practitioner', icon: '⚡', description: 'Demonstrated AI skill depth' });
   if (levelScores.strategicThinking >= 50) badges.push({ id: 'strategist_start', name: 'AI Thinker', icon: '🧠', description: 'Strategic AI thinking demonstrated' });
   if (levelScores.futureReadiness >= 50) badges.push({ id: 'strategist', name: 'AI Strategist', icon: '🌟', description: 'Ready for the AI-transformed future' });
+  if (levelScores.technicalFluency >= 50) badges.push({ id: 'technician', name: 'AI Technician', icon: '🔬', description: 'Deep technical AI fluency demonstrated' });
   if (Object.values(levelScores).every(s => s >= 70)) badges.push({ id: 'champion', name: 'AI Champion', icon: '🏆', description: 'High scores across all dimensions' });
   return badges;
 }
@@ -81,7 +84,7 @@ export function generateGapAnalysis(department, levelScores) {
   const target = northStarTargets[department];
   if (!target) return [];
 
-  const currentLevel = Object.values(levelScores).reduce((a, b) => a + b, 0) / 5;
+  const currentLevel = Object.values(levelScores).reduce((a, b) => a + b, 0) / 6;
   const currentMaturity = 1 + (currentLevel / 100) * 4; // Map 0-100 to 1-5
   const gap = target.level - currentMaturity;
 
@@ -124,6 +127,12 @@ export function generateRoadmap(levelScores, department) {
     roadmap.sixMonths.push('Develop skills in AI oversight and agent management');
     roadmap.sixMonths.push('Create a personal AI skill development plan');
     roadmap.sixMonths.push('Mentor a colleague on AI tool adoption');
+  }
+  if (levelScores.technicalFluency < 60) {
+    roadmap.thirtyDays.push('Learn prompt engineering fundamentals (few-shot, chain-of-thought, system prompts)');
+    roadmap.sixtyDays.push('Compare capabilities across AI platforms (Claude, ChatGPT, Gemini, Perplexity)');
+    roadmap.sixtyDays.push('Understand context windows, RAG, and when to use fine-tuning vs. retrieval');
+    roadmap.sixMonths.push('Master advanced techniques: temperature tuning, structured outputs, multi-model workflows');
   }
 
   // Add department-specific items
@@ -170,6 +179,7 @@ function getLevelLabel(key) {
     skillDepth: 'Skill Depth',
     strategicThinking: 'Strategic Thinking',
     futureReadiness: 'Future Readiness',
+    technicalFluency: 'Technical Fluency',
   };
   return labels[key] || key;
 }

@@ -6,6 +6,7 @@ const LEVEL_BADGES = {
   3: { icon: '⚡', name: 'AI Practitioner' },
   4: { icon: '🧠', name: 'AI Thinker' },
   5: { icon: '🌟', name: 'AI Strategist' },
+  6: { icon: '🔬', name: 'AI Technician' },
 };
 
 export default function LevelUpScreen({ level, levelName, score, xp, onContinue }) {

@@ -1,4 +1,5 @@
 import Dexie from 'dexie';
+import { cloudSaveAssessment, cloudSaveResponses, cloudGetAllAssessments, getSupabaseConfig } from './supabase';
 
 export const db = new Dexie('AIReadinessDB');
 
@@ -73,30 +74,35 @@ export async function saveAssessment(data) {
     timestamp: new Date().toISOString(),
   };
 
+  let localId;
+
   if (useLocalStorageFallback) {
     const all = getLSAssessments();
-    const id = all.length > 0 ? Math.max(...all.map(a => a.id || 0)) + 1 : 1;
-    record.id = id;
+    localId = all.length > 0 ? Math.max(...all.map(a => a.id || 0)) + 1 : 1;
+    record.id = localId;
     all.push(record);
     setLSAssessments(all);
-    console.log('[DB-LS] Assessment saved:', id);
-    return { id, anonymousId };
+    console.log('[DB-LS] Assessment saved:', localId);
+  } else {
+    try {
+      localId = await db.assessments.add(record);
+      console.log('[DB] Assessment saved to IndexedDB:', localId);
+    } catch (err) {
+      console.error('[DB] IndexedDB save failed, falling back to localStorage:', err);
+      const all = getLSAssessments();
+      localId = all.length > 0 ? Math.max(...all.map(a => a.id || 0)) + 1 : 1;
+      record.id = localId;
+      all.push(record);
+      setLSAssessments(all);
+    }
   }
 
-  try {
-    const id = await db.assessments.add(record);
-    console.log('[DB] Assessment saved to IndexedDB:', id);
-    return { id, anonymousId };
-  } catch (err) {
-    console.error('[DB] IndexedDB save failed, falling back to localStorage:', err);
-    // Fallback: save to localStorage
-    const all = getLSAssessments();
-    const id = all.length > 0 ? Math.max(...all.map(a => a.id || 0)) + 1 : 1;
-    record.id = id;
-    all.push(record);
-    setLSAssessments(all);
-    return { id, anonymousId };
+  // Cloud sync (fire-and-forget, don't block the user)
+  if (getSupabaseConfig()) {
+    cloudSaveAssessment(record).catch(err => console.warn('[Cloud] Sync failed:', err));
   }
+
+  return { id: localId, anonymousId };
 }
 
 export async function saveResponses(assessmentId, responses) {
@@ -110,19 +116,24 @@ export async function saveResponses(assessmentId, responses) {
     all.push(...items);
     setLSResponses(all);
     console.log('[DB-LS] Responses saved:', items.length);
-    return;
+  } else {
+    try {
+      await db.responses.bulkAdd(items);
+      console.log('[DB] Responses saved to IndexedDB:', items.length);
+    } catch (err) {
+      console.error('[DB] IndexedDB response save failed, falling back to localStorage:', err);
+      const all = getLSResponses();
+      let nextId = all.length > 0 ? Math.max(...all.map(r => r.id || 0)) + 1 : 1;
+      items.forEach(item => { item.id = nextId++; });
+      all.push(...items);
+      setLSResponses(all);
+    }
   }
 
-  try {
-    await db.responses.bulkAdd(items);
-    console.log('[DB] Responses saved to IndexedDB:', items.length);
-  } catch (err) {
-    console.error('[DB] IndexedDB response save failed, falling back to localStorage:', err);
-    const all = getLSResponses();
-    let nextId = all.length > 0 ? Math.max(...all.map(r => r.id || 0)) + 1 : 1;
-    items.forEach(item => { item.id = nextId++; });
-    all.push(...items);
-    setLSResponses(all);
+  // Cloud sync responses (fire-and-forget)
+  // Note: cloud assessment ID may differ from local ID; we use local ID as reference
+  if (getSupabaseConfig()) {
+    cloudSaveResponses(assessmentId, responses).catch(err => console.warn('[Cloud] Response sync failed:', err));
   }
 }
 
@@ -144,26 +155,50 @@ export async function getAssessment(id) {
   }
 }
 
-export async function getAllAssessments() {
+export async function getAllAssessments({ includeCloud = false } = {}) {
   await dbReady;
+
+  // Get local assessments
+  let local = [];
   if (useLocalStorageFallback) {
-    return getLSAssessments();
+    local = getLSAssessments();
+  } else {
+    try {
+      const idbResults = await db.assessments.toArray();
+      const lsResults = getLSAssessments();
+      local = [...idbResults];
+      const idbIds = new Set(idbResults.map(a => a.id));
+      lsResults.forEach(a => {
+        if (!idbIds.has(a.id)) local.push(a);
+      });
+    } catch (err) {
+      console.error('[DB] getAllAssessments failed:', err);
+      local = getLSAssessments();
+    }
   }
 
-  try {
-    const idbResults = await db.assessments.toArray();
-    const lsResults = getLSAssessments();
-    // Merge: combine both sources, deduplicate by id
-    const combined = [...idbResults];
-    const idbIds = new Set(idbResults.map(a => a.id));
-    lsResults.forEach(a => {
-      if (!idbIds.has(a.id)) combined.push(a);
-    });
-    return combined;
-  } catch (err) {
-    console.error('[DB] getAllAssessments failed:', err);
-    return getLSAssessments();
+  // If cloud is configured and requested, merge cloud data
+  if (includeCloud && getSupabaseConfig()) {
+    try {
+      const cloudData = await cloudGetAllAssessments();
+      if (cloudData.length > 0) {
+        console.log('[DB] Fetched', cloudData.length, 'cloud assessments');
+        // Cloud data takes priority for the dashboard — it has ALL users' data
+        // Deduplicate by anonymousId + timestamp
+        const localKeys = new Set(local.map(a => `${a.anonymousId}_${a.timestamp}`));
+        cloudData.forEach(ca => {
+          const key = `${ca.anonymousId}_${ca.timestamp}`;
+          if (!localKeys.has(key)) {
+            local.push(ca);
+          }
+        });
+      }
+    } catch (err) {
+      console.warn('[DB] Cloud fetch failed, using local only:', err);
+    }
   }
+
+  return local;
 }
 
 export async function getAssessmentResponses(assessmentId) {

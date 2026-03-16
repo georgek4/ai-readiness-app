@@ -15,7 +15,7 @@ export default function OrgDashboard() {
   const [assessments, setAssessments] = useState([]);
 
   useEffect(() => {
-    getAllAssessments().then(setAssessments);
+    getAllAssessments({ includeCloud: true }).then(setAssessments);
   }, []);
 
   if (assessments.length === 0) {
@@ -65,7 +65,7 @@ export default function OrgDashboard() {
   // Scatter plot data
   const scatterData = assessments.map(a => ({
     x: a.overallScore,
-    y: Object.values(a.scores || {}).reduce((s, v) => s + v, 0) / 5,
+    y: Object.values(a.scores || {}).reduce((s, v) => s + v, 0) / (Object.keys(a.scores || {}).length || 1),
     dept: departments.find(d => d.id === a.department)?.name || a.department,
     id: a.id,
   }));
@@ -75,7 +75,7 @@ export default function OrgDashboard() {
     const deptAssessments = assessments.filter(a => a.department === dept.id);
     const avgScores = {};
     if (deptAssessments.length > 0) {
-      ['awareness', 'currentUsage', 'skillDepth', 'strategicThinking', 'futureReadiness'].forEach(key => {
+      ['awareness', 'currentUsage', 'skillDepth', 'strategicThinking', 'futureReadiness', 'technicalFluency'].forEach(key => {
         avgScores[key] = Math.round(
           deptAssessments.reduce((s, a) => s + (a.scores?.[key] || 0), 0) / deptAssessments.length
         );
@@ -186,6 +186,7 @@ export default function OrgDashboard() {
                   <th className="p-2 text-text-muted">Depth</th>
                   <th className="p-2 text-text-muted">Strategic</th>
                   <th className="p-2 text-text-muted">Readiness</th>
+                  <th className="p-2 text-text-muted">Technical</th>
                   <th className="p-2 text-text-muted">N</th>
                 </tr>
               </thead>
@@ -193,7 +194,7 @@ export default function OrgDashboard() {
                 {heatmapData.map(row => (
                   <tr key={row.id} className="border-t border-border">
                     <td className="p-2 text-text-primary">{row.icon} {row.dept}</td>
-                    {['awareness', 'currentUsage', 'skillDepth', 'strategicThinking', 'futureReadiness'].map(key => (
+                    {['awareness', 'currentUsage', 'skillDepth', 'strategicThinking', 'futureReadiness', 'technicalFluency'].map(key => (
                       <td key={key} className="p-2 text-center">
                         <span
                           className="inline-block w-10 h-10 rounded-lg flex items-center justify-center text-xs font-bold"

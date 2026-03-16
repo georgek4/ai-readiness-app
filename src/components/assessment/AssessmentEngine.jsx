@@ -6,7 +6,7 @@ import { saveAssessment, saveResponses } from '../../db/database';
 import { calculateScoresFromResponses, calculateXP, calculateBadges, generateGapAnalysis, generateRoadmap } from '../../utils/scoring';
 import LevelUpScreen from './LevelUpScreen';
 
-const LEVEL_NAMES = ['', 'AI Awareness', 'Current Usage', 'Skill Depth', 'Strategic Thinking', 'Future Readiness'];
+const LEVEL_NAMES = ['', 'AI Awareness', 'Current Usage', 'Skill Depth', 'Strategic Thinking', 'Future Readiness', 'Technical Fluency'];
 
 export default function AssessmentEngine() {
   const navigate = useNavigate();
@@ -42,7 +42,7 @@ export default function AssessmentEngine() {
   }, [profile]);
 
   const currentQuestion = questions[currentQuestionIdx];
-  const totalQuestions = 30;
+  const totalQuestions = 36;
   const answeredTotal = allResponses.length;
   const progress = (answeredTotal / totalQuestions) * 100;
 
@@ -72,7 +72,7 @@ export default function AssessmentEngine() {
 
     if (currentQuestionIdx < questions.length - 1) {
       setCurrentQuestionIdx(prev => prev + 1);
-    } else if (currentLevel < 5) {
+    } else if (currentLevel < 6) {
       // Level complete - show level up screen
       const levelResponses = newResponses.filter(r => r.level === currentLevel);
       const levelTotal = levelResponses.reduce((s, r) => s + r.score, 0);
@@ -255,7 +255,7 @@ export default function AssessmentEngine() {
             disabled={!selectedAnswer}
             className="mt-8 w-full py-4 rounded-xl bg-primary hover:bg-primary-dark disabled:opacity-30 disabled:cursor-not-allowed text-white font-semibold text-lg transition-all"
           >
-            {currentQuestionIdx === questions.length - 1 && currentLevel === 5
+            {currentQuestionIdx === questions.length - 1 && currentLevel === 6
               ? '🏆 Complete Assessment'
               : currentQuestionIdx === questions.length - 1
               ? `⬆️ Complete Level ${currentLevel}`

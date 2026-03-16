@@ -62,6 +62,7 @@ export default function Results() {
     { subject: 'Skill Depth', score: assessment.scores.skillDepth, fullMark: 100 },
     { subject: 'Strategic Thinking', score: assessment.scores.strategicThinking, fullMark: 100 },
     { subject: 'Future Readiness', score: assessment.scores.futureReadiness, fullMark: 100 },
+    { subject: 'Technical Fluency', score: assessment.scores.technicalFluency, fullMark: 100 },
   ];
 
   const gapData = assessment.gapAnalysis ? [{
@@ -297,4 +298,5 @@ const labelMap = {
   skillDepth: 'Skill Depth',
   strategicThinking: 'Strategic Thinking',
   futureReadiness: 'Future Readiness',
+  technicalFluency: 'Technical Fluency',
 };

@@ -412,6 +412,84 @@ function generateL5Questions(deptId) {
   ];
 }
 
+// ──────────────────────────────────────────────────────
+// Level 6: Technical Fluency (6 questions)
+// Tests actual AI tool knowledge: prompt techniques,
+// platform differences, context windows, RAG/projects,
+// model parameters, tool selection for use cases
+// ──────────────────────────────────────────────────────
+function generateL6Questions(deptId) {
+  const m = deptMeta[deptId];
+  return [
+    {
+      id: `${m.code}-L6-001`, department: deptId, level: 6, weight: 1.0, difficulty: 'advanced',
+      questionText: 'What is "few-shot prompting" and when is it most useful?',
+      type: 'multiple_choice',
+      options: [
+        { id: 'a', text: 'A technique where you limit the AI to only a few words in its response, useful when you need concise outputs for dashboards or summaries', points: 0 },
+        { id: 'b', text: 'Including 2-5 examples of desired input/output pairs in your prompt so the AI learns the pattern — most useful for consistent formatting, classification, or style matching', points: 5 },
+        { id: 'c', text: 'Running the same prompt multiple times and selecting the best output from several "shots" — useful when AI output quality is inconsistent', points: 1 },
+        { id: 'd', text: 'A fine-tuning technique where you train the model on a small dataset of a few hundred examples to customize it for your specific domain', points: 1 },
+      ],
+    },
+    {
+      id: `${m.code}-L6-002`, department: deptId, level: 6, weight: 1.0, difficulty: 'advanced',
+      questionText: `You need to research a competitor's latest product announcement from last week and draft a ${deptId.replace(/_/g, ' ')} briefing. Which tool is best suited?`,
+      type: 'scenario',
+      options: [
+        { id: 'a', text: 'Claude — its 200K context window means it can analyze the most data and produce the highest quality output for any research task', points: 1 },
+        { id: 'b', text: 'Perplexity — it searches the live web and cites sources, so it can find recent announcements that LLMs with training data cutoffs would miss', points: 5 },
+        { id: 'c', text: 'ChatGPT with GPT-4 — as the most widely-used AI, it has the most comprehensive training data and will know about recent events', points: 1 },
+        { id: 'd', text: 'GitHub Copilot — its enterprise features include real-time market intelligence and competitive analysis capabilities', points: 0 },
+      ],
+    },
+    {
+      id: `${m.code}-L6-003`, department: deptId, level: 6, weight: 1.0, difficulty: 'advanced',
+      questionText: 'You\'re trying to get an AI to analyze a 150-page document, but the model has a 32K token context window. What\'s the best approach?',
+      type: 'scenario',
+      options: [
+        { id: 'a', text: 'Simply paste the entire document — modern AI models automatically summarize inputs that exceed their context window without losing important information', points: 0 },
+        { id: 'b', text: 'Switch to a model with a larger context window (like Claude\'s 200K tokens), or chunk the document into sections with overlap and process each with targeted questions', points: 5 },
+        { id: 'c', text: 'Use the AI\'s built-in file upload feature — uploaded files are stored in a separate memory space that doesn\'t count against the context window', points: 1 },
+        { id: 'd', text: 'Compress the document by removing all formatting, images, and whitespace to reduce the token count below the 32K limit', points: 2 },
+      ],
+    },
+    {
+      id: `${m.code}-L6-004`, department: deptId, level: 6, weight: 1.0, difficulty: 'advanced',
+      questionText: 'What is Retrieval-Augmented Generation (RAG) and how does it differ from fine-tuning?',
+      type: 'multiple_choice',
+      options: [
+        { id: 'a', text: 'RAG and fine-tuning are the same thing — both involve training the AI model on your company\'s proprietary data to improve accuracy and relevance', points: 0 },
+        { id: 'b', text: 'RAG retrieves relevant documents at query time and includes them in the prompt context; fine-tuning permanently modifies the model\'s weights. RAG is better for current data, fine-tuning for changing behavior patterns', points: 5 },
+        { id: 'c', text: 'RAG generates multiple responses and retrieves the best one; fine-tuning adjusts the generation parameters like temperature. RAG improves quality, fine-tuning improves consistency', points: 1 },
+        { id: 'd', text: 'RAG requires a vector database and embedding models, making it more expensive and complex than fine-tuning, which only needs a simple JSON file of examples', points: 2 },
+      ],
+    },
+    {
+      id: `${m.code}-L6-005`, department: deptId, level: 6, weight: 1.0, difficulty: 'advanced',
+      questionText: 'When would you set an AI model\'s "temperature" to 0 versus a higher value like 0.8?',
+      type: 'multiple_choice',
+      options: [
+        { id: 'a', text: 'Temperature 0 uses less compute and is faster; 0.8 activates more processing power for complex tasks. Use 0 for simple tasks and 0.8 for difficult analysis', points: 0 },
+        { id: 'b', text: 'Temperature 0 produces near-deterministic, consistent outputs (best for data extraction, classification, or factual Q&A); 0.8 introduces more randomness and creativity (best for brainstorming, content drafting)', points: 5 },
+        { id: 'c', text: 'Temperature 0 means the model won\'t use any training data and only relies on the provided context; 0.8 means it blends context with training data. Use 0 when context is sufficient', points: 0 },
+        { id: 'd', text: 'Temperature controls response length — 0 gives shorter responses and 0.8 gives longer, more detailed ones. Use lower values when you need concise output', points: 0 },
+      ],
+    },
+    {
+      id: `${m.code}-L6-006`, department: deptId, level: 6, weight: 1.0, difficulty: 'advanced',
+      questionText: 'What are "system prompts" (or "custom instructions") and what is a Claude Project?',
+      type: 'multiple_choice',
+      options: [
+        { id: 'a', text: 'System prompts are admin settings that control who can access the AI tool; Claude Projects are team workspaces for sharing chat history with colleagues', points: 0 },
+        { id: 'b', text: 'System prompts define the AI\'s persistent role, behavior, and constraints for every interaction; Claude Projects combine system prompts with uploaded knowledge files to create a customized AI assistant for a specific domain or workflow', points: 5 },
+        { id: 'c', text: 'System prompts are the initial training instructions used when building the AI model; Claude Projects are Anthropic\'s enterprise API offering for deploying custom models', points: 1 },
+        { id: 'd', text: 'System prompts are templates that auto-fill your first message in a chat; Claude Projects are pre-built prompt libraries organized by industry that Anthropic maintains', points: 1 },
+      ],
+    },
+  ];
+}
+
 // Generate all questions
 function generateAllQuestions() {
   const deptIds = Object.keys(deptMeta);
@@ -422,6 +500,7 @@ function generateAllQuestions() {
     all.push(...generateL3Questions(deptId));
     all.push(...generateL4Questions(deptId));
     all.push(...generateL5Questions(deptId));
+    all.push(...generateL6Questions(deptId));
   }
   return all;
 }

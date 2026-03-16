@@ -129,6 +129,7 @@ export function exportResultsPDF(assessment, department, tier, gapAnalysis) {
     { key: 'skillDepth', label: 'Skill Depth' },
     { key: 'strategicThinking', label: 'Strategic Thinking' },
     { key: 'futureReadiness', label: 'Future Readiness' },
+    { key: 'technicalFluency', label: 'Technical Fluency' },
   ];
 
   dimensions.forEach(dim => {
@@ -368,8 +369,8 @@ export function exportDashboardPDF(assessments, departments, northStarTargets, t
   doc.setFontSize(9);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(60, 60, 60);
-  const cols = [14, 65, 90, 115, 140, 165, 195, 225];
-  ['Department', 'Avg Score', 'Awareness', 'Usage', 'Depth', 'Strategic', 'Readiness', 'Target'].forEach((h, i) => {
+  const cols = [14, 55, 78, 100, 120, 142, 164, 186, 210];
+  ['Department', 'Avg', 'Aware', 'Usage', 'Depth', 'Strategy', 'Ready', 'Tech', 'Target'].forEach((h, i) => {
     doc.text(h, cols[i], y);
   });
   y += 2;
@@ -396,9 +397,10 @@ export function exportDashboardPDF(assessments, departments, northStarTargets, t
     doc.text(`${dimAvg('skillDepth')}`, cols[4], y);
     doc.text(`${dimAvg('strategicThinking')}`, cols[5], y);
     doc.text(`${dimAvg('futureReadiness')}`, cols[6], y);
+    doc.text(`${dimAvg('technicalFluency')}`, cols[7], y);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(...COLORS.green);
-    doc.text(`${target}`, cols[7], y);
+    doc.text(`${target}`, cols[8], y);
     y += 7;
   });
 
