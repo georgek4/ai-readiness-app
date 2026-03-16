@@ -76,6 +76,16 @@ const DEPT_PROFILES = {
     roles: ['VP Enablement', 'Enablement Manager', 'Sales Enablement Specialist', 'Onboarding Specialist', 'Enablement Content Lead'],
     count: 4,
   },
+  customer_success: {
+    means: [76, 72, 58, 66, 62, 40], variance: 13,
+    roles: ['VP Customer Success', 'Director of Customer Success', 'Senior CSM', 'Customer Success Manager', 'Digital CS Manager', 'Renewal Manager'],
+    count: 7,
+  },
+  support: {
+    means: [70, 74, 55, 52, 55, 45], variance: 15,
+    roles: ['VP Support', 'Support Manager', 'Senior Support Engineer', 'Support Engineer', 'Technical Support Specialist', 'Escalation Manager'],
+    count: 8,
+  },
 };
 
 const DIMENSION_KEYS = ['awareness', 'currentUsage', 'skillDepth', 'strategicThinking', 'futureReadiness', 'technicalFluency'];
@@ -149,6 +159,7 @@ function makeGapAnalysis(department, scores) {
     value_engineering: 4.0, product_management: 4.5, engineering: 4.5,
     product_design: 3.5, customer_education: 3.5, demo_engineering: 4.0,
     industry_strategy: 4.0, revenue_operations: 4.0, enablement: 3.5,
+    customer_success: 4.0, support: 4.5,
   };
   const targetMaturity = targets[department] || 3.5;
   const gap = Math.round((targetMaturity - currentMaturity) * 10) / 10;

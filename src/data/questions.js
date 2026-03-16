@@ -17,6 +17,8 @@ const deptMeta = {
   industry_strategy: { code: 'IND', tools: ['ChatGPT', 'Perplexity', 'AlphaSense', 'Gartner AI', 'CB Insights', 'Notion AI'], workflows: ['trend analysis', 'thought leadership', 'industry content creation', 'benchmark research', 'advisory board facilitation'] },
   revenue_operations: { code: 'REV', tools: ['Salesforce Einstein', 'Clari', 'Gong', 'LeanData', 'ChatGPT', 'Tableau', 'dbt'], workflows: ['CRM administration', 'pipeline analytics', 'forecasting', 'territory planning', 'data enrichment', 'reporting'] },
   enablement: { code: 'EN', tools: ['Gong', 'Highspot', 'Seismic', 'ChatGPT', 'Lessonly', 'Mindtickle', 'Allego'], workflows: ['onboarding design', 'content creation', 'call coaching', 'certification programs', 'competitive training', 'skills assessment'] },
+  customer_success: { code: 'CS', tools: ['Gainsight', 'Totango', 'ChurnZero', 'Vitally', 'ChatGPT', 'Salesforce', 'Catalyst', 'Planhat'], workflows: ['customer onboarding', 'health scoring', 'QBR preparation', 'renewal management', 'adoption tracking', 'expansion identification', 'churn prevention', 'digital engagement'] },
+  support: { code: 'SUP', tools: ['Zendesk', 'Intercom', 'Freshdesk', 'ServiceNow', 'ChatGPT', 'Ada', 'Forethought', 'Assembled'], workflows: ['ticket triage', 'first-response resolution', 'advanced troubleshooting', 'knowledge base management', 'chatbot management', 'incident management', 'SLA monitoring', 'root cause analysis'] },
 };
 
 // ──────────────────────────────────────────────────────

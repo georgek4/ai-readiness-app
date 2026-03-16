@@ -359,6 +359,62 @@ export const departments = [
     ],
     metrics: ['Time-to-Productivity', 'Quota Attainment (enabled vs. not)', 'Content Utilization Rate', 'Training Completion Rate', 'Certification Pass Rate', 'Win Rate by Enablement Cohort', 'Deal Size Impact'],
   },
+  {
+    id: 'customer_success',
+    name: 'Customer Success',
+    icon: '🤝',
+    mission: 'Drive customer adoption, retention, and expansion by ensuring customers realize the full value of the product and achieve their desired outcomes.',
+    roles: [
+      'VP Customer Success', 'Director of Customer Success', 'Customer Success Manager',
+      'Senior CSM', 'Digital CS Manager', 'CS Operations Manager',
+      'Renewal Manager', 'Expansion Manager', 'Customer Advocate'
+    ],
+    activities: [
+      { id: 'cs_strategy', name: 'CS strategy & segmentation', description: 'Defining customer segments, coverage models, and success plans', classification: 'humanize', rationale: 'Requires strategic thinking about customer needs and business priorities' },
+      { id: 'cs_onboarding', name: 'Customer onboarding orchestration', description: 'Guiding new customers through initial setup and adoption milestones', classification: 'agentify', rationale: 'AI tracks progress and sends reminders; human handles complex conversations' },
+      { id: 'cs_health_scoring', name: 'Customer health scoring', description: 'Monitoring product usage, engagement, and risk signals', classification: 'automate', rationale: 'ML models aggregate signals and score health; human validates edge cases' },
+      { id: 'cs_qbr_prep', name: 'QBR / EBR preparation', description: 'Preparing quarterly business reviews with usage data and value delivered', classification: 'agentify', rationale: 'AI compiles usage data and draft slides; human crafts narrative and delivers' },
+      { id: 'cs_qbr_delivery', name: 'QBR / EBR delivery', description: 'Presenting business reviews and aligning on future goals', classification: 'humanize', rationale: 'Requires executive presence, relationship-building, and strategic dialogue' },
+      { id: 'cs_adoption', name: 'Product adoption & enablement', description: 'Driving feature adoption and usage expansion within accounts', classification: 'agentify', rationale: 'AI identifies adoption gaps and suggests actions; human executes personalized outreach' },
+      { id: 'cs_risk', name: 'Churn risk identification & mitigation', description: 'Detecting at-risk accounts and building save plans', classification: 'agentify', rationale: 'AI predicts churn risk; human designs and executes intervention strategies' },
+      { id: 'cs_expansion', name: 'Expansion opportunity identification', description: 'Spotting upsell and cross-sell signals in the customer base', classification: 'agentify', rationale: 'AI identifies signals from usage and engagement; human qualifies and pursues' },
+      { id: 'cs_renewal', name: 'Renewal management', description: 'Managing the renewal process and negotiating terms', classification: 'agentify', rationale: 'AI automates reminders and risk flags; human negotiates complex renewals' },
+      { id: 'cs_advocacy', name: 'Customer advocacy & references', description: 'Cultivating customer advocates, case studies, and references', classification: 'humanize', rationale: 'Requires deep relationship trust and storytelling ability' },
+      { id: 'cs_feedback', name: 'Voice of customer & feedback loops', description: 'Collecting, synthesizing, and routing customer feedback to product', classification: 'agentify', rationale: 'AI aggregates and categorizes feedback; human prioritizes and communicates' },
+      { id: 'cs_playbooks', name: 'Success playbook execution', description: 'Running standardized plays for lifecycle stages', classification: 'agentify', rationale: 'AI triggers and automates routine plays; human handles exceptions' },
+      { id: 'cs_digital', name: 'Digital / tech-touch engagement', description: 'Automated engagement for long-tail and SMB customers', classification: 'automate', rationale: 'Fully automated email sequences, in-app messaging, and chatbot interactions' },
+      { id: 'cs_reporting', name: 'CS analytics & reporting', description: 'Tracking NRR, GRR, health trends, and CS team performance', classification: 'agentify', rationale: 'AI generates dashboards and insights; human interprets and acts' },
+    ],
+    metrics: ['Net Revenue Retention (NRR)', 'Gross Revenue Retention (GRR)', 'Customer Health Score', 'Time-to-Value', 'Product Adoption Rate', 'NPS / CSAT', 'Expansion Revenue', 'Churn Rate', 'QBR Completion Rate'],
+  },
+  {
+    id: 'support',
+    name: 'Support',
+    icon: '🛟',
+    mission: 'Resolve customer issues quickly and effectively, minimize downtime, and ensure a positive support experience that strengthens customer loyalty.',
+    roles: [
+      'VP Support', 'Director of Support', 'Support Manager',
+      'Senior Support Engineer', 'Support Engineer', 'Technical Support Specialist',
+      'Support Operations Manager', 'Escalation Manager', 'Knowledge Base Manager'
+    ],
+    activities: [
+      { id: 'sup_triage', name: 'Ticket triage & routing', description: 'Categorizing incoming tickets and routing to the right team', classification: 'automate', rationale: 'NLP classifies and routes tickets automatically with high accuracy' },
+      { id: 'sup_l1', name: 'Tier 1 / first-response resolution', description: 'Handling initial customer inquiries and common issues', classification: 'agentify', rationale: 'AI chatbots handle routine queries; human handles sensitive or complex issues' },
+      { id: 'sup_l2', name: 'Tier 2 / advanced troubleshooting', description: 'Investigating complex technical issues requiring deep product knowledge', classification: 'humanize', rationale: 'Requires critical thinking, creative problem-solving, and customer empathy' },
+      { id: 'sup_l3', name: 'Tier 3 / engineering escalation', description: 'Working with engineering on bugs and product issues', classification: 'humanize', rationale: 'Requires deep technical collaboration, debugging, and cross-team communication' },
+      { id: 'sup_kb', name: 'Knowledge base creation & maintenance', description: 'Writing and updating help articles, FAQs, and troubleshooting guides', classification: 'agentify', rationale: 'AI drafts articles from resolved tickets; human reviews and publishes' },
+      { id: 'sup_selfserve', name: 'Self-service & chatbot management', description: 'Building and maintaining automated self-service channels', classification: 'agentify', rationale: 'AI powers the chatbot; human trains, tunes, and monitors quality' },
+      { id: 'sup_csat', name: 'CSAT & satisfaction monitoring', description: 'Collecting and analyzing customer satisfaction surveys', classification: 'automate', rationale: 'Surveys are automated; AI analyzes sentiment and identifies trends' },
+      { id: 'sup_sla', name: 'SLA monitoring & alerting', description: 'Tracking SLA compliance and alerting on at-risk tickets', classification: 'automate', rationale: 'Fully automated monitoring with rule-based escalations' },
+      { id: 'sup_incident', name: 'Incident management & communication', description: 'Coordinating response to major incidents and communicating status', classification: 'humanize', rationale: 'Requires real-time coordination, judgment, and stakeholder communication' },
+      { id: 'sup_root_cause', name: 'Root cause analysis & trending', description: 'Identifying patterns in support tickets to surface product issues', classification: 'agentify', rationale: 'AI clusters and trends issues; human validates and escalates to product' },
+      { id: 'sup_documentation', name: 'Internal runbook documentation', description: 'Creating internal procedures for resolving known issues', classification: 'agentify', rationale: 'AI drafts from ticket resolutions; human validates technical accuracy' },
+      { id: 'sup_training', name: 'Support team training & QA', description: 'Training new agents and reviewing quality of responses', classification: 'humanize', rationale: 'Requires coaching, mentoring, and judgment on quality standards' },
+      { id: 'sup_reporting', name: 'Support analytics & reporting', description: 'Tracking ticket volumes, resolution times, CSAT trends, and agent performance', classification: 'agentify', rationale: 'AI generates reports and anomaly alerts; human interprets and presents' },
+      { id: 'sup_automation', name: 'Workflow & macro automation', description: 'Building automated workflows, macros, and response templates', classification: 'automate', rationale: 'Rules-based automation handles repetitive workflows end-to-end' },
+    ],
+    metrics: ['First Response Time', 'Mean Time to Resolution (MTTR)', 'CSAT Score', 'Ticket Volume', 'First Contact Resolution Rate', 'SLA Compliance', 'Ticket Deflection Rate', 'Agent Utilization', 'Escalation Rate'],
+  },
 ];
 
 // Apply enrichments to all department activities

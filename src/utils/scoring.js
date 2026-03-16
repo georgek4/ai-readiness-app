@@ -150,6 +150,8 @@ export function generateRoadmap(levelScores, department) {
     industry_strategy: { thirtyDays: ['Use AI to monitor industry news and trends'], sixtyDays: ['Generate AI-drafted industry whitepapers'], sixMonths: ['Build AI-powered vertical benchmark dashboards'] },
     revenue_operations: { thirtyDays: ['Use AI for CRM data quality auditing'], sixtyDays: ['Implement AI-powered forecasting models'], sixMonths: ['Deploy AI agents for lead routing optimization'] },
     enablement: { thirtyDays: ['Use AI to create micro-learning content'], sixtyDays: ['Implement AI call coaching insights'], sixMonths: ['Build AI-powered skills assessment programs'] },
+    customer_success: { thirtyDays: ['Use AI to draft your next QBR deck from usage data'], sixtyDays: ['Set up AI-powered customer health scoring'], sixMonths: ['Deploy AI agents for digital-touch customer engagement'] },
+    support: { thirtyDays: ['Use AI to draft knowledge base articles from resolved tickets'], sixtyDays: ['Implement AI-powered ticket triage and routing'], sixMonths: ['Deploy AI chatbot for Tier 1 resolution and ticket deflection'] },
   };
 
   const deptItems = deptRoadmaps[department];
