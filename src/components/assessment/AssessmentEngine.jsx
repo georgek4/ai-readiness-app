@@ -93,30 +93,61 @@ export default function AssessmentEngine() {
   };
 
   const finishAssessment = async (responses) => {
-    const { levelScores, overallScore, tier } = calculateScoresFromResponses(responses);
-    const totalXP = calculateXP(responses);
-    const badges = calculateBadges(levelScores);
-    const gapAnalysis = generateGapAnalysis(profile.department, levelScores);
-    const roadmap = generateRoadmap(levelScores, profile.department);
+    try {
+      const { levelScores, overallScore, tier } = calculateScoresFromResponses(responses);
+      const totalXP = calculateXP(responses);
+      const badges = calculateBadges(levelScores);
+      const gapAnalysis = generateGapAnalysis(profile.department, levelScores);
+      const roadmap = generateRoadmap(levelScores, profile.department);
 
-    const assessmentData = {
-      name: profile.name,
-      department: profile.department,
-      role: profile.role,
-      orgName: profile.orgName || '',
-      yearsExperience: profile.yearsExperience || '',
-      scores: levelScores,
-      overallScore,
-      tier: tier.name,
-      xpTotal: totalXP,
-      badges: badges.map(b => b.name),
-      gapAnalysis,
-      roadmap,
-    };
+      const assessmentData = {
+        name: profile.name,
+        department: profile.department,
+        role: profile.role,
+        orgName: profile.orgName || '',
+        yearsExperience: profile.yearsExperience || '',
+        scores: levelScores,
+        overallScore,
+        tier: tier.name,
+        xpTotal: totalXP,
+        badges: badges.map(b => b.name),
+        gapAnalysis,
+        roadmap,
+      };
 
-    const { id } = await saveAssessment(assessmentData);
-    await saveResponses(id, responses);
-    navigate(`/results/${id}`);
+      console.log('[Assessment] Saving assessment data:', { overallScore, tier: tier.name, department: profile.department });
+      const { id } = await saveAssessment(assessmentData);
+      console.log('[Assessment] Assessment saved with id:', id);
+      await saveResponses(id, responses);
+      console.log('[Assessment] Responses saved:', responses.length);
+      navigate(`/results/${id}`);
+    } catch (err) {
+      console.error('[Assessment] Failed to save assessment:', err);
+      // Emergency fallback: save to sessionStorage so results page can still show data
+      const { levelScores, overallScore, tier } = calculateScoresFromResponses(responses);
+      const totalXP = calculateXP(responses);
+      const badges = calculateBadges(levelScores);
+      const gapAnalysis = generateGapAnalysis(profile.department, levelScores);
+      const roadmap = generateRoadmap(levelScores, profile.department);
+      const emergencyData = {
+        id: Date.now(),
+        name: profile.name,
+        department: profile.department,
+        role: profile.role,
+        orgName: profile.orgName || '',
+        yearsExperience: profile.yearsExperience || '',
+        scores: levelScores,
+        overallScore,
+        tier: tier.name,
+        xpTotal: totalXP,
+        badges: badges.map(b => b.name),
+        gapAnalysis,
+        roadmap,
+        timestamp: new Date().toISOString(),
+      };
+      sessionStorage.setItem('emergencyAssessment', JSON.stringify(emergencyData));
+      navigate(`/results/${emergencyData.id}`);
+    }
   };
 
   if (!profile || !currentQuestion) {

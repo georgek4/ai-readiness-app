@@ -7,75 +7,287 @@ db.version(1).stores({
   responses: '++id, assessmentId, level, questionId, answer, score',
 });
 
+// ── Fallback: localStorage-based storage if IndexedDB fails ──
+const LS_ASSESSMENTS_KEY = 'ai_readiness_assessments';
+const LS_RESPONSES_KEY = 'ai_readiness_responses';
+let useLocalStorageFallback = false;
+
+function getLSAssessments() {
+  try {
+    return JSON.parse(localStorage.getItem(LS_ASSESSMENTS_KEY) || '[]');
+  } catch { return []; }
+}
+
+function setLSAssessments(data) {
+  localStorage.setItem(LS_ASSESSMENTS_KEY, JSON.stringify(data));
+}
+
+function getLSResponses() {
+  try {
+    return JSON.parse(localStorage.getItem(LS_RESPONSES_KEY) || '[]');
+  } catch { return []; }
+}
+
+function setLSResponses(data) {
+  localStorage.setItem(LS_RESPONSES_KEY, JSON.stringify(data));
+}
+
+// Check if IndexedDB is actually working
+async function checkIndexedDB() {
+  try {
+    await db.open();
+    // Quick write/read test
+    return true;
+  } catch (err) {
+    console.warn('IndexedDB not available, falling back to localStorage:', err);
+    useLocalStorageFallback = true;
+    return false;
+  }
+}
+
+// Initialize on load
+const dbReady = checkIndexedDB();
+
 let anonymousCounter = null;
 
 async function getNextAnonymousId() {
+  await dbReady;
   if (anonymousCounter === null) {
-    const count = await db.assessments.count();
-    anonymousCounter = count;
+    if (useLocalStorageFallback) {
+      anonymousCounter = getLSAssessments().length;
+    } else {
+      const count = await db.assessments.count();
+      anonymousCounter = count;
+    }
   }
   anonymousCounter++;
   return `User_${String(anonymousCounter).padStart(3, '0')}`;
 }
 
 export async function saveAssessment(data) {
+  await dbReady;
   const anonymousId = await getNextAnonymousId();
-  const id = await db.assessments.add({
+  const record = {
     ...data,
     anonymousId,
     timestamp: new Date().toISOString(),
-  });
-  return { id, anonymousId };
+  };
+
+  if (useLocalStorageFallback) {
+    const all = getLSAssessments();
+    const id = all.length > 0 ? Math.max(...all.map(a => a.id || 0)) + 1 : 1;
+    record.id = id;
+    all.push(record);
+    setLSAssessments(all);
+    console.log('[DB-LS] Assessment saved:', id);
+    return { id, anonymousId };
+  }
+
+  try {
+    const id = await db.assessments.add(record);
+    console.log('[DB] Assessment saved to IndexedDB:', id);
+    return { id, anonymousId };
+  } catch (err) {
+    console.error('[DB] IndexedDB save failed, falling back to localStorage:', err);
+    // Fallback: save to localStorage
+    const all = getLSAssessments();
+    const id = all.length > 0 ? Math.max(...all.map(a => a.id || 0)) + 1 : 1;
+    record.id = id;
+    all.push(record);
+    setLSAssessments(all);
+    return { id, anonymousId };
+  }
 }
 
 export async function saveResponses(assessmentId, responses) {
+  await dbReady;
   const items = responses.map(r => ({ ...r, assessmentId }));
-  await db.responses.bulkAdd(items);
+
+  if (useLocalStorageFallback) {
+    const all = getLSResponses();
+    let nextId = all.length > 0 ? Math.max(...all.map(r => r.id || 0)) + 1 : 1;
+    items.forEach(item => { item.id = nextId++; });
+    all.push(...items);
+    setLSResponses(all);
+    console.log('[DB-LS] Responses saved:', items.length);
+    return;
+  }
+
+  try {
+    await db.responses.bulkAdd(items);
+    console.log('[DB] Responses saved to IndexedDB:', items.length);
+  } catch (err) {
+    console.error('[DB] IndexedDB response save failed, falling back to localStorage:', err);
+    const all = getLSResponses();
+    let nextId = all.length > 0 ? Math.max(...all.map(r => r.id || 0)) + 1 : 1;
+    items.forEach(item => { item.id = nextId++; });
+    all.push(...items);
+    setLSResponses(all);
+  }
 }
 
 export async function getAssessment(id) {
-  return db.assessments.get(id);
+  await dbReady;
+  if (useLocalStorageFallback) {
+    return getLSAssessments().find(a => a.id === id) || null;
+  }
+
+  try {
+    const result = await db.assessments.get(id);
+    if (result) return result;
+    // Fallback: check localStorage too (in case some were saved there)
+    const lsResult = getLSAssessments().find(a => a.id === id);
+    return lsResult || null;
+  } catch (err) {
+    console.error('[DB] getAssessment failed:', err);
+    return getLSAssessments().find(a => a.id === id) || null;
+  }
 }
 
 export async function getAllAssessments() {
-  return db.assessments.toArray();
+  await dbReady;
+  if (useLocalStorageFallback) {
+    return getLSAssessments();
+  }
+
+  try {
+    const idbResults = await db.assessments.toArray();
+    const lsResults = getLSAssessments();
+    // Merge: combine both sources, deduplicate by id
+    const combined = [...idbResults];
+    const idbIds = new Set(idbResults.map(a => a.id));
+    lsResults.forEach(a => {
+      if (!idbIds.has(a.id)) combined.push(a);
+    });
+    return combined;
+  } catch (err) {
+    console.error('[DB] getAllAssessments failed:', err);
+    return getLSAssessments();
+  }
 }
 
 export async function getAssessmentResponses(assessmentId) {
-  return db.responses.where('assessmentId').equals(assessmentId).toArray();
+  await dbReady;
+  if (useLocalStorageFallback) {
+    return getLSResponses().filter(r => r.assessmentId === assessmentId);
+  }
+
+  try {
+    const results = await db.responses.where('assessmentId').equals(assessmentId).toArray();
+    if (results.length > 0) return results;
+    // Fallback check
+    return getLSResponses().filter(r => r.assessmentId === assessmentId);
+  } catch (err) {
+    console.error('[DB] getAssessmentResponses failed:', err);
+    return getLSResponses().filter(r => r.assessmentId === assessmentId);
+  }
 }
 
 export async function getAssessmentsByOrg(orgName) {
-  return db.assessments.where('orgName').equals(orgName).toArray();
+  await dbReady;
+  if (useLocalStorageFallback) {
+    return getLSAssessments().filter(a => a.orgName === orgName);
+  }
+
+  try {
+    return db.assessments.where('orgName').equals(orgName).toArray();
+  } catch (err) {
+    return getLSAssessments().filter(a => a.orgName === orgName);
+  }
 }
 
 export async function getAssessmentsByDepartment(department) {
-  return db.assessments.where('department').equals(department).toArray();
+  await dbReady;
+  if (useLocalStorageFallback) {
+    return getLSAssessments().filter(a => a.department === department);
+  }
+
+  try {
+    return db.assessments.where('department').equals(department).toArray();
+  } catch (err) {
+    return getLSAssessments().filter(a => a.department === department);
+  }
 }
 
 export async function deleteAssessment(id) {
-  await db.responses.where('assessmentId').equals(id).delete();
-  await db.assessments.delete(id);
+  await dbReady;
+  // Remove from localStorage
+  const lsAssessments = getLSAssessments().filter(a => a.id !== id);
+  setLSAssessments(lsAssessments);
+  const lsResponses = getLSResponses().filter(r => r.assessmentId !== id);
+  setLSResponses(lsResponses);
+
+  if (!useLocalStorageFallback) {
+    try {
+      await db.responses.where('assessmentId').equals(id).delete();
+      await db.assessments.delete(id);
+    } catch (err) {
+      console.error('[DB] deleteAssessment failed:', err);
+    }
+  }
 }
 
 export async function clearAllData() {
-  await db.responses.clear();
-  await db.assessments.clear();
+  await dbReady;
+  // Clear localStorage
+  localStorage.removeItem(LS_ASSESSMENTS_KEY);
+  localStorage.removeItem(LS_RESPONSES_KEY);
   anonymousCounter = 0;
+
+  if (!useLocalStorageFallback) {
+    try {
+      await db.responses.clear();
+      await db.assessments.clear();
+    } catch (err) {
+      console.error('[DB] clearAllData failed:', err);
+    }
+  }
 }
 
 export async function exportData() {
-  const assessments = await db.assessments.toArray();
-  const responses = await db.responses.toArray();
+  await dbReady;
+  const assessments = await getAllAssessments();
+  const responses = useLocalStorageFallback
+    ? getLSResponses()
+    : await db.responses.toArray();
   const anonymized = assessments.map(({ name, ...rest }) => rest);
   return { assessments: anonymized, responses, exportDate: new Date().toISOString(), version: 1 };
 }
 
 export async function importData(data) {
-  if (data.assessments) {
-    await db.assessments.bulkAdd(data.assessments);
+  await dbReady;
+  if (useLocalStorageFallback) {
+    if (data.assessments) {
+      const existing = getLSAssessments();
+      existing.push(...data.assessments);
+      setLSAssessments(existing);
+    }
+    if (data.responses) {
+      const existing = getLSResponses();
+      existing.push(...data.responses);
+      setLSResponses(existing);
+    }
+    return;
   }
-  if (data.responses) {
-    await db.responses.bulkAdd(data.responses);
+
+  try {
+    if (data.assessments) {
+      await db.assessments.bulkAdd(data.assessments);
+    }
+    if (data.responses) {
+      await db.responses.bulkAdd(data.responses);
+    }
+  } catch (err) {
+    console.error('[DB] importData failed, using localStorage:', err);
+    if (data.assessments) {
+      const existing = getLSAssessments();
+      existing.push(...data.assessments);
+      setLSAssessments(existing);
+    }
+    if (data.responses) {
+      const existing = getLSResponses();
+      existing.push(...data.responses);
+      setLSResponses(existing);
+    }
   }
 }

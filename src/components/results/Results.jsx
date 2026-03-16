@@ -13,7 +13,34 @@ export default function Results() {
   const [assessment, setAssessment] = useState(null);
 
   useEffect(() => {
-    getAssessment(Number(id)).then(setAssessment);
+    const loadAssessment = async () => {
+      try {
+        // Try loading from database (works for both IndexedDB and localStorage fallback)
+        let data = await getAssessment(Number(id));
+        if (!data) {
+          // Check emergency sessionStorage fallback
+          const emergency = sessionStorage.getItem('emergencyAssessment');
+          if (emergency) {
+            data = JSON.parse(emergency);
+            console.log('[Results] Loaded from emergency fallback');
+          }
+        }
+        if (data) {
+          console.log('[Results] Assessment loaded:', data.id, data.overallScore);
+          setAssessment(data);
+        } else {
+          console.error('[Results] Assessment not found for id:', id);
+        }
+      } catch (err) {
+        console.error('[Results] Error loading assessment:', err);
+        // Try emergency fallback
+        const emergency = sessionStorage.getItem('emergencyAssessment');
+        if (emergency) {
+          setAssessment(JSON.parse(emergency));
+        }
+      }
+    };
+    loadAssessment();
   }, [id]);
 
   if (!assessment) {

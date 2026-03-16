@@ -24,12 +24,17 @@ export const northStarTargets = {
 
 export const tierDefinitions = [
   { name: 'Analog', min: 0, max: 20, color: '#6B7280', description: 'No meaningful AI adoption' },
-  { name: 'Experimenter', min: 21, max: 40, color: '#F59E0B', description: 'Beginning to explore AI tools' },
-  { name: 'Adopter', min: 41, max: 60, color: '#3B82F6', description: 'Actively using AI in workflows' },
-  { name: 'Scaler', min: 61, max: 80, color: '#8B5CF6', description: 'AI integrated across most workflows' },
-  { name: 'Transformer', min: 81, max: 100, color: '#10B981', description: 'AI-first mindset and operations' },
+  { name: 'Experimenter', min: 20.01, max: 40, color: '#F59E0B', description: 'Beginning to explore AI tools' },
+  { name: 'Adopter', min: 40.01, max: 60, color: '#3B82F6', description: 'Actively using AI in workflows' },
+  { name: 'Scaler', min: 60.01, max: 80, color: '#8B5CF6', description: 'AI integrated across most workflows' },
+  { name: 'Transformer', min: 80.01, max: 100, color: '#10B981', description: 'AI-first mindset and operations' },
 ];
 
 export const getTierForScore = (score) => {
-  return tierDefinitions.find(t => score >= t.min && score <= t.max) || tierDefinitions[0];
+  // Use threshold-based matching to avoid gaps between tier ranges
+  if (score > 80) return tierDefinitions[4];  // Transformer
+  if (score > 60) return tierDefinitions[3];  // Scaler
+  if (score > 40) return tierDefinitions[2];  // Adopter
+  if (score > 20) return tierDefinitions[1];  // Experimenter
+  return tierDefinitions[0];                  // Analog
 };
