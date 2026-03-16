@@ -2,27 +2,18 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { getAllAssessments, exportData, importData, clearAllData, deleteAssessment } from '../../db/database';
 import { departments } from '../../data/departments';
-import { getSupabaseConfig, setSupabaseConfig, cloudTestConnection, SETUP_SQL } from '../../db/supabase';
+import { seedToSupabase } from '../../utils/seedData';
 
 export default function DataManagement() {
   const [assessments, setAssessments] = useState([]);
   const [importStatus, setImportStatus] = useState('');
   const [showConfirmClear, setShowConfirmClear] = useState(false);
-  const [supabaseUrl, setSupabaseUrl] = useState('');
-  const [supabaseKey, setSupabaseKey] = useState('');
-  const [cloudStatus, setCloudStatus] = useState('');
-  const [showSQL, setShowSQL] = useState(false);
+  const [seedStatus, setSeedStatus] = useState('');
+  const [seeding, setSeeding] = useState(false);
 
   const load = () => getAllAssessments({ includeCloud: true }).then(setAssessments);
 
-  useEffect(() => {
-    load();
-    const config = getSupabaseConfig();
-    if (config) {
-      setSupabaseUrl(config.url || '');
-      setSupabaseKey(config.anonKey || '');
-    }
-  }, []);
+  useEffect(() => { load(); }, []);
 
   const handleExport = async () => {
     const data = await exportData();
@@ -61,6 +52,22 @@ export default function DataManagement() {
     load();
   };
 
+  const handleSeedData = async () => {
+    setSeeding(true);
+    setSeedStatus('Generating and uploading sample data...');
+    try {
+      const result = await seedToSupabase();
+      setSeedStatus(result.ok
+        ? `Done! ${result.message}`
+        : `Completed with issues: ${result.message}`
+      );
+      load();
+    } catch (err) {
+      setSeedStatus(`Error: ${err.message}`);
+    }
+    setSeeding(false);
+  };
+
   return (
     <div className="max-w-4xl mx-auto space-y-8">
       <div className="text-center">
@@ -69,7 +76,7 @@ export default function DataManagement() {
       </div>
 
       {/* Actions */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
         <motion.button
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
@@ -95,6 +102,18 @@ export default function DataManagement() {
         <motion.button
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
+          onClick={handleSeedData}
+          disabled={seeding}
+          className="glass-card p-6 text-center cursor-pointer border border-primary/30 disabled:opacity-50"
+        >
+          <div className="text-3xl mb-2">🌱</div>
+          <div className="font-semibold text-primary">{seeding ? 'Seeding...' : 'Seed Sample Data'}</div>
+          <div className="text-sm text-text-muted">Generate realistic SaaS data</div>
+        </motion.button>
+
+        <motion.button
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
           onClick={() => setShowConfirmClear(true)}
           className="glass-card p-6 text-center cursor-pointer border border-accent-red/30"
         >
@@ -110,6 +129,12 @@ export default function DataManagement() {
         </div>
       )}
 
+      {seedStatus && (
+        <div className={`p-4 rounded-xl text-sm ${seedStatus.includes('Error') ? 'bg-accent-red/20 text-accent-red' : 'bg-accent-green/20 text-accent-green'}`}>
+          {seedStatus}
+        </div>
+      )}
+
       {showConfirmClear && (
         <div className="glass-card p-6 border border-accent-red/50">
           <p className="text-text-primary mb-4">Are you sure? This will permanently delete all assessment data from your browser.</p>
@@ -120,86 +145,15 @@ export default function DataManagement() {
         </div>
       )}
 
-      {/* Supabase Cloud Storage */}
-      <div className="glass-card p-6">
-        <h3 className="text-lg font-semibold text-text-primary mb-2">☁️ Cloud Storage (Supabase)</h3>
-        <p className="text-sm text-text-muted mb-4">
-          Connect to Supabase to centrally store all assessment data across browsers and sessions.
-        </p>
-        <div className="space-y-3">
-          <div>
-            <label className="block text-sm text-text-secondary mb-1">Supabase Project URL</label>
-            <input
-              type="url"
-              value={supabaseUrl}
-              onChange={e => setSupabaseUrl(e.target.value)}
-              placeholder="https://your-project.supabase.co"
-              className="w-full px-4 py-2 rounded-xl bg-bg-dark border border-border text-text-primary placeholder-text-muted focus:border-primary focus:outline-none"
-            />
-          </div>
-          <div>
-            <label className="block text-sm text-text-secondary mb-1">Anon (Public) Key</label>
-            <input
-              type="password"
-              value={supabaseKey}
-              onChange={e => setSupabaseKey(e.target.value)}
-              placeholder="eyJhbGciOiJIUzI1NiIs..."
-              className="w-full px-4 py-2 rounded-xl bg-bg-dark border border-border text-text-primary placeholder-text-muted focus:border-primary focus:outline-none"
-            />
-          </div>
-          <div className="flex flex-wrap gap-3">
-            <button
-              onClick={() => {
-                setSupabaseConfig(supabaseUrl, supabaseKey);
-                setCloudStatus('Configuration saved!');
-                load();
-              }}
-              className="px-5 py-2 rounded-xl bg-primary hover:bg-primary-dark text-white text-sm font-medium transition-all"
-            >
-              Save Config
-            </button>
-            <button
-              onClick={async () => {
-                setSupabaseConfig(supabaseUrl, supabaseKey);
-                setCloudStatus('Testing connection...');
-                const result = await cloudTestConnection();
-                setCloudStatus(result.ok ? `Connected! ${result.message}` : `Error: ${result.error}`);
-                if (result.ok) load();
-              }}
-              className="px-5 py-2 rounded-xl bg-accent-green/20 hover:bg-accent-green/30 text-accent-green text-sm font-medium transition-all"
-            >
-              Test Connection
-            </button>
-            <button
-              onClick={() => {
-                setSupabaseConfig(null, null);
-                setSupabaseUrl('');
-                setSupabaseKey('');
-                setCloudStatus('Cloud storage disconnected.');
-              }}
-              className="px-5 py-2 rounded-xl bg-bg-card border border-border text-text-muted text-sm font-medium transition-all hover:text-text-primary"
-            >
-              Disconnect
-            </button>
-          </div>
-          {cloudStatus && (
-            <div className={`p-3 rounded-xl text-sm ${cloudStatus.includes('Error') ? 'bg-accent-red/20 text-accent-red' : 'bg-accent-green/20 text-accent-green'}`}>
-              {cloudStatus}
-            </div>
-          )}
-          <div>
-            <button
-              onClick={() => setShowSQL(!showSQL)}
-              className="text-sm text-primary hover:underline"
-            >
-              {showSQL ? 'Hide' : 'Show'} SQL Setup Script
-            </button>
-            {showSQL && (
-              <pre className="mt-2 p-4 rounded-xl bg-bg-dark border border-border text-xs text-text-secondary overflow-x-auto whitespace-pre-wrap">
-                {SETUP_SQL}
-              </pre>
-            )}
-          </div>
+      {/* Cloud Status */}
+      <div className="glass-card p-4 flex items-center gap-3">
+        <span className="text-xl">☁️</span>
+        <div>
+          <div className="text-sm font-medium text-text-primary">Cloud Storage Active</div>
+          <div className="text-xs text-text-muted">All assessments are automatically synced to the central database</div>
+        </div>
+        <div className="ml-auto">
+          <span className="inline-block w-2.5 h-2.5 rounded-full bg-accent-green animate-pulse" />
         </div>
       </div>
 
@@ -213,20 +167,25 @@ export default function DataManagement() {
             {assessments.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)).map(a => {
               const dept = departments.find(d => d.id === a.department);
               return (
-                <div key={a.id} className="flex items-center justify-between p-3 rounded-xl bg-bg-dark border border-border">
+                <div key={`${a.id}-${a._source || 'local'}`} className="flex items-center justify-between p-3 rounded-xl bg-bg-dark border border-border">
                   <div className="flex items-center gap-3">
                     <span className="text-xl">{dept?.icon}</span>
                     <div>
-                      <div className="text-text-primary font-medium text-sm">{a.anonymousId} &mdash; {dept?.name}</div>
+                      <div className="text-text-primary font-medium text-sm">
+                        {a.anonymousId} &mdash; {dept?.name}
+                        {a._source === 'cloud' && <span className="ml-2 text-xs text-accent-blue">☁️</span>}
+                      </div>
                       <div className="text-xs text-text-muted">{a.role} &middot; Score: {a.overallScore} &middot; {new Date(a.timestamp).toLocaleDateString()}</div>
                     </div>
                   </div>
-                  <button
-                    onClick={() => handleDelete(a.id)}
-                    className="text-accent-red/60 hover:text-accent-red text-sm px-3 py-1"
-                  >
-                    Delete
-                  </button>
+                  {a._source !== 'cloud' && (
+                    <button
+                      onClick={() => handleDelete(a.id)}
+                      className="text-accent-red/60 hover:text-accent-red text-sm px-3 py-1"
+                    >
+                      Delete
+                    </button>
+                  )}
                 </div>
               );
             })}
