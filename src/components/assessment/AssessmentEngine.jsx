@@ -30,19 +30,19 @@ export default function AssessmentEngine() {
     const p = JSON.parse(stored);
     setProfile(p);
     const qs = getQuestionsByLevel(p.department, 1);
-    setQuestions(qs.length > 0 ? qs.slice(0, 10) : []);
+    setQuestions(qs.length > 0 ? qs.slice(0, 6) : []);
   }, [navigate]);
 
   const loadLevel = useCallback((level) => {
     if (!profile) return;
     const qs = getQuestionsByLevel(profile.department, level);
-    setQuestions(qs.length > 0 ? qs.slice(0, 10) : []);
+    setQuestions(qs.length > 0 ? qs.slice(0, 6) : []);
     setCurrentQuestionIdx(0);
     setSelectedAnswer(null);
   }, [profile]);
 
   const currentQuestion = questions[currentQuestionIdx];
-  const totalQuestions = 50;
+  const totalQuestions = 30;
   const answeredTotal = allResponses.length;
   const progress = (answeredTotal / totalQuestions) * 100;
 

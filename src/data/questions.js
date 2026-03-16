@@ -1,7 +1,7 @@
 // AI Readiness Assessment Question Bank
-// 650 questions: 13 departments × 5 levels × 10 questions each
-// Redesigned to resist gaming: randomized correct positions, plausible distractors,
-// similarly-detailed options, trap answers, and non-linear ordering.
+// 390 questions: 13 departments × 5 levels × 6 questions each
+// Trimmed from 50→30 per assessment to eliminate repetition
+// Anti-gaming: randomized correct positions, plausible distractors, trap answers
 
 const deptMeta = {
   marketing: { code: 'MKT', tools: ['ChatGPT', 'Jasper', 'Copy.ai', 'HubSpot AI', 'Midjourney', 'DALL-E', 'Grammarly AI', 'Surfer SEO'], workflows: ['content creation', 'campaign management', 'SEO', 'email marketing', 'social media', 'analytics', 'lead scoring', 'A/B testing'] },
@@ -19,7 +19,11 @@ const deptMeta = {
   enablement: { code: 'EN', tools: ['Gong', 'Highspot', 'Seismic', 'ChatGPT', 'Lessonly', 'Mindtickle', 'Allego'], workflows: ['onboarding design', 'content creation', 'call coaching', 'certification programs', 'competitive training', 'skills assessment'] },
 };
 
-// Level 1: AI Awareness (basic knowledge)
+// ──────────────────────────────────────────────────────
+// Level 1: AI Awareness (6 questions)
+// Tests: definition, tool familiarity, hallucination,
+//        H/A/R framework, content accuracy, automation judgment
+// ──────────────────────────────────────────────────────
 function generateL1Questions(deptId) {
   const m = deptMeta[deptId];
   return [
@@ -48,13 +52,13 @@ function generateL1Questions(deptId) {
     },
     {
       id: `${m.code}-L1-003`, department: deptId, level: 1, weight: 1.0, difficulty: 'beginner',
-      questionText: 'What does the term "prompt engineering" refer to?',
+      questionText: 'What is an "AI hallucination"?',
       type: 'multiple_choice',
       options: [
-        { id: 'a', text: 'Building custom AI models from scratch using large datasets and GPU clusters to train neural networks for specific business domains', points: 0 },
-        { id: 'b', text: 'Managing the technical infrastructure that runs AI systems, including server provisioning, load balancing, and API gateway configuration', points: 0 },
-        { id: 'c', text: 'Crafting effective instructions and context to get better, more relevant outputs from AI tools', points: 5 },
-        { id: 'd', text: 'Optimizing the speed and latency of AI model responses through caching, batching, and hardware acceleration techniques', points: 0 },
+        { id: 'a', text: 'A visual artifact that appears when AI generates images using diffusion models at low resolution settings', points: 1 },
+        { id: 'b', text: 'When an AI system crashes or produces error messages due to exceeding its computational limits', points: 0 },
+        { id: 'c', text: 'When AI generates information that sounds plausible and confident but is factually incorrect or entirely fabricated', points: 5 },
+        { id: 'd', text: 'A deliberate feature where AI creates imaginative, creative content that goes beyond the literal prompt instructions', points: 1 },
       ],
     },
     {
@@ -70,52 +74,6 @@ function generateL1Questions(deptId) {
     },
     {
       id: `${m.code}-L1-005`, department: deptId, level: 1, weight: 1.0, difficulty: 'beginner',
-      questionText: `How often do you encounter discussions about AI adoption in your ${deptId.replace(/_/g, ' ')} team?`,
-      type: 'frequency',
-      options: [
-        { id: 'never', text: 'Never', points: 0 },
-        { id: 'rarely', text: 'Rarely (a few times a year)', points: 1 },
-        { id: 'sometimes', text: 'Sometimes (monthly)', points: 2 },
-        { id: 'often', text: 'Often (weekly)', points: 4 },
-        { id: 'always', text: 'Daily or near-daily', points: 5 },
-      ],
-    },
-    {
-      id: `${m.code}-L1-006`, department: deptId, level: 1, weight: 1.0, difficulty: 'beginner',
-      questionText: 'What is an "AI hallucination"?',
-      type: 'multiple_choice',
-      options: [
-        { id: 'a', text: 'A visual artifact that appears when AI generates images using diffusion models at low resolution settings', points: 1 },
-        { id: 'b', text: 'When an AI system crashes or produces error messages due to exceeding its computational limits', points: 0 },
-        { id: 'c', text: 'When AI generates information that sounds plausible and confident but is factually incorrect or entirely fabricated', points: 5 },
-        { id: 'd', text: 'A deliberate feature where AI creates imaginative, creative content that goes beyond the literal prompt instructions', points: 1 },
-      ],
-    },
-    {
-      id: `${m.code}-L1-007`, department: deptId, level: 1, weight: 1.0, difficulty: 'beginner',
-      questionText: `In the context of ${deptId.replace(/_/g, ' ')}, what is the primary benefit of AI adoption?`,
-      type: 'multiple_choice',
-      options: [
-        { id: 'a', text: 'Eliminating the need for domain expertise by having AI make all complex decisions based on its superior knowledge and pattern recognition', points: 0 },
-        { id: 'b', text: 'Augmenting human capabilities — handling repetitive tasks so people can focus on higher-value work', points: 5 },
-        { id: 'c', text: 'Reducing headcount by at least 40-60% within two years as AI agents take over most knowledge worker functions', points: 0 },
-        { id: 'd', text: 'Creating a competitive moat through proprietary AI models that competitors cannot replicate or reverse-engineer', points: 1 },
-      ],
-    },
-    {
-      id: `${m.code}-L1-008`, department: deptId, level: 1, weight: 1.0, difficulty: 'beginner',
-      questionText: 'How would you rate your overall understanding of how AI can be applied in your day-to-day work?',
-      type: 'self_rating',
-      options: [
-        { id: '1', text: 'No understanding at all', points: 1 },
-        { id: '2', text: 'Very basic awareness', points: 2 },
-        { id: '3', text: 'Moderate understanding — I can see some use cases', points: 3 },
-        { id: '4', text: 'Good understanding — I know several ways AI could help', points: 4 },
-        { id: '5', text: 'Strong understanding — I can identify AI opportunities across most of my workflows', points: 5 },
-      ],
-    },
-    {
-      id: `${m.code}-L1-009`, department: deptId, level: 1, weight: 1.0, difficulty: 'beginner',
       questionText: 'In the Humanize / Agentify / Automate framework, what does "Agentify" mean?',
       type: 'multiple_choice',
       options: [
@@ -126,7 +84,7 @@ function generateL1Questions(deptId) {
       ],
     },
     {
-      id: `${m.code}-L1-010`, department: deptId, level: 1, weight: 1.0, difficulty: 'beginner',
+      id: `${m.code}-L1-006`, department: deptId, level: 1, weight: 1.0, difficulty: 'beginner',
       questionText: `Which of these ${deptId.replace(/_/g, ' ')} tasks would be LEAST suitable for full AI automation?`,
       type: 'multiple_choice',
       options: [
@@ -139,7 +97,11 @@ function generateL1Questions(deptId) {
   ];
 }
 
-// Level 2: Current Usage
+// ──────────────────────────────────────────────────────
+// Level 2: Current Usage (6 questions)
+// Tests: frequency, typical approach, data sensitivity,
+//        helping others, time savings, team integration
+// ──────────────────────────────────────────────────────
 function generateL2Questions(deptId) {
   const m = deptMeta[deptId];
   return [
@@ -156,18 +118,7 @@ function generateL2Questions(deptId) {
       ],
     },
     {
-      id: `${m.code}-L2-002`, department: deptId, level: 2, weight: 1.0, difficulty: 'beginner',
-      questionText: `Which best describes your current AI usage for ${deptId.replace(/_/g, ' ')} workflows?`,
-      type: 'multiple_choice',
-      options: [
-        { id: 'a', text: 'I have not used AI for any work tasks yet', points: 0 },
-        { id: 'b', text: `I've integrated AI across most of my key workflows including ${m.workflows.slice(0, 4).join(', ')} and actively optimize my approach`, points: 5 },
-        { id: 'c', text: `I've used AI for one specific task like ${m.workflows[0]} but haven't expanded beyond that`, points: 2 },
-        { id: 'd', text: `I use AI for a few different workflows including ${m.workflows[0]} and ${m.workflows[1]}, with reasonable consistency`, points: 4 },
-      ],
-    },
-    {
-      id: `${m.code}-L2-003`, department: deptId, level: 2, weight: 1.0, difficulty: 'intermediate',
+      id: `${m.code}-L2-002`, department: deptId, level: 2, weight: 1.0, difficulty: 'intermediate',
       questionText: `When you use AI to assist with ${m.workflows[0]}, what is your typical approach?`,
       type: 'scenario',
       options: [
@@ -178,18 +129,7 @@ function generateL2Questions(deptId) {
       ],
     },
     {
-      id: `${m.code}-L2-004`, department: deptId, level: 2, weight: 1.0, difficulty: 'beginner',
-      questionText: 'Does your team have shared guidelines or best practices for using AI tools?',
-      type: 'multiple_choice',
-      options: [
-        { id: 'a', text: 'Yes, we have comprehensive documented guidelines covering tools, use cases, quality standards, and data handling protocols', points: 5 },
-        { id: 'b', text: 'We have basic documented guidelines that cover the essentials like approved tools and general usage tips', points: 3 },
-        { id: 'c', text: 'No formal guidelines exist — some people informally share tips but nothing is documented or standardized', points: 2 },
-        { id: 'd', text: 'No, there are no guidelines at all and the topic hasn\'t been discussed at a team level', points: 0 },
-      ],
-    },
-    {
-      id: `${m.code}-L2-005`, department: deptId, level: 2, weight: 1.0, difficulty: 'intermediate',
+      id: `${m.code}-L2-003`, department: deptId, level: 2, weight: 1.0, difficulty: 'intermediate',
       questionText: 'How do you currently handle sensitive or confidential data when using AI tools?',
       type: 'multiple_choice',
       options: [
@@ -200,19 +140,7 @@ function generateL2Questions(deptId) {
       ],
     },
     {
-      id: `${m.code}-L2-006`, department: deptId, level: 2, weight: 1.0, difficulty: 'beginner',
-      questionText: `How many distinct AI tools or features do you use regularly for ${deptId.replace(/_/g, ' ')} work?`,
-      type: 'self_rating',
-      options: [
-        { id: '1', text: 'None', points: 0 },
-        { id: '2', text: '1 tool', points: 2 },
-        { id: '3', text: '2-3 tools', points: 3 },
-        { id: '4', text: '4-5 tools', points: 4 },
-        { id: '5', text: '6+ tools across different workflows', points: 5 },
-      ],
-    },
-    {
-      id: `${m.code}-L2-007`, department: deptId, level: 2, weight: 1.0, difficulty: 'intermediate',
+      id: `${m.code}-L2-004`, department: deptId, level: 2, weight: 1.0, difficulty: 'intermediate',
       questionText: 'How would you estimate the time savings from your current AI tool usage?',
       type: 'multiple_choice',
       options: [
@@ -223,19 +151,7 @@ function generateL2Questions(deptId) {
       ],
     },
     {
-      id: `${m.code}-L2-008`, department: deptId, level: 2, weight: 1.0, difficulty: 'beginner',
-      questionText: 'Have you shared AI techniques or prompt strategies with your teammates?',
-      type: 'frequency',
-      options: [
-        { id: 'never', text: 'Never', points: 0 },
-        { id: 'rarely', text: 'Rarely — once or twice', points: 1 },
-        { id: 'sometimes', text: 'Sometimes — when it comes up', points: 2 },
-        { id: 'often', text: 'Often — I regularly share what works', points: 4 },
-        { id: 'always', text: 'Actively and consistently — I champion adoption', points: 5 },
-      ],
-    },
-    {
-      id: `${m.code}-L2-009`, department: deptId, level: 2, weight: 1.0, difficulty: 'intermediate',
+      id: `${m.code}-L2-005`, department: deptId, level: 2, weight: 1.0, difficulty: 'intermediate',
       questionText: `A colleague asks for help getting started with AI for ${m.workflows[1]}. What do you do?`,
       type: 'scenario',
       options: [
@@ -246,7 +162,7 @@ function generateL2Questions(deptId) {
       ],
     },
     {
-      id: `${m.code}-L2-010`, department: deptId, level: 2, weight: 1.0, difficulty: 'intermediate',
+      id: `${m.code}-L2-006`, department: deptId, level: 2, weight: 1.0, difficulty: 'intermediate',
       questionText: 'How integrated is AI into your team\'s standard operating procedures?',
       type: 'multiple_choice',
       options: [
@@ -259,7 +175,12 @@ function generateL2Questions(deptId) {
   ];
 }
 
-// Level 3: Skill Depth
+// ──────────────────────────────────────────────────────
+// Level 3: Skill Depth (6 questions)
+// Tests: debugging output, handling inconsistency,
+//        evaluating accuracy, building workflows,
+//        handling limitations, maintaining standards
+// ──────────────────────────────────────────────────────
 function generateL3Questions(deptId) {
   const m = deptMeta[deptId];
   return [
@@ -276,18 +197,6 @@ function generateL3Questions(deptId) {
     },
     {
       id: `${m.code}-L3-002`, department: deptId, level: 3, weight: 1.0, difficulty: 'intermediate',
-      questionText: 'How skilled are you at writing effective prompts for complex, multi-step tasks?',
-      type: 'self_rating',
-      options: [
-        { id: '1', text: 'Not skilled — I only use simple one-line prompts', points: 1 },
-        { id: '2', text: 'Basic — I can add context but mostly trial-and-error', points: 2 },
-        { id: '3', text: 'Moderate — I use structured prompts with role, context, and constraints', points: 3 },
-        { id: '4', text: 'Advanced — I use chain-of-thought, few-shot examples, and systematic iteration', points: 4 },
-        { id: '5', text: 'Expert — I design complex prompt workflows with reusable templates and can diagnose failures', points: 5 },
-      ],
-    },
-    {
-      id: `${m.code}-L3-003`, department: deptId, level: 3, weight: 1.0, difficulty: 'intermediate',
       questionText: `You need to use AI for ${m.workflows[2]} but the output quality is inconsistent. What approach would you take?`,
       type: 'scenario',
       options: [
@@ -298,7 +207,7 @@ function generateL3Questions(deptId) {
       ],
     },
     {
-      id: `${m.code}-L3-004`, department: deptId, level: 3, weight: 1.0, difficulty: 'intermediate',
+      id: `${m.code}-L3-003`, department: deptId, level: 3, weight: 1.0, difficulty: 'intermediate',
       questionText: 'How do you evaluate the quality and accuracy of AI-generated output?',
       type: 'multiple_choice',
       options: [
@@ -309,31 +218,7 @@ function generateL3Questions(deptId) {
       ],
     },
     {
-      id: `${m.code}-L3-005`, department: deptId, level: 3, weight: 1.0, difficulty: 'advanced',
-      questionText: `Can you customize or fine-tune AI tools for your specific ${deptId.replace(/_/g, ' ')} needs?`,
-      type: 'self_rating',
-      options: [
-        { id: '1', text: 'No — I only use AI tools with their default settings', points: 1 },
-        { id: '2', text: 'Minimal — I\'ve saved a few favorite prompts or bookmarked useful templates', points: 2 },
-        { id: '3', text: 'Moderate — I\'ve built prompt libraries, custom GPTs, or similar tailored configurations', points: 3 },
-        { id: '4', text: 'Advanced — I\'ve set up custom workflows, integrated AI via APIs, or built automations connecting tools', points: 4 },
-        { id: '5', text: 'Expert — I design end-to-end AI-powered systems with custom integrations and automated pipelines', points: 5 },
-      ],
-    },
-    {
-      id: `${m.code}-L3-006`, department: deptId, level: 3, weight: 1.0, difficulty: 'intermediate',
-      questionText: 'How effectively can you combine multiple AI tools to accomplish a complex workflow?',
-      type: 'self_rating',
-      options: [
-        { id: '1', text: 'I don\'t combine AI tools — I use one at a time', points: 1 },
-        { id: '2', text: 'I occasionally copy output from one tool into another manually', points: 2 },
-        { id: '3', text: 'I have workflows that chain 2-3 AI tools with defined handoff points', points: 3 },
-        { id: '4', text: 'I\'ve built structured multi-tool workflows with clear inputs and outputs at each stage', points: 4 },
-        { id: '5', text: 'I design multi-tool pipelines with automation, error handling, and quality gates connecting them', points: 5 },
-      ],
-    },
-    {
-      id: `${m.code}-L3-007`, department: deptId, level: 3, weight: 1.0, difficulty: 'advanced',
+      id: `${m.code}-L3-004`, department: deptId, level: 3, weight: 1.0, difficulty: 'advanced',
       questionText: `Your manager asks you to create a reusable AI workflow for ${m.workflows[3]}. What do you deliver?`,
       type: 'scenario',
       options: [
@@ -344,7 +229,7 @@ function generateL3Questions(deptId) {
       ],
     },
     {
-      id: `${m.code}-L3-008`, department: deptId, level: 3, weight: 1.0, difficulty: 'intermediate',
+      id: `${m.code}-L3-005`, department: deptId, level: 3, weight: 1.0, difficulty: 'intermediate',
       questionText: 'How do you handle AI tool limitations (e.g., context window limits, outdated training data)?',
       type: 'multiple_choice',
       options: [
@@ -355,7 +240,7 @@ function generateL3Questions(deptId) {
       ],
     },
     {
-      id: `${m.code}-L3-009`, department: deptId, level: 3, weight: 1.0, difficulty: 'intermediate',
+      id: `${m.code}-L3-006`, department: deptId, level: 3, weight: 1.0, difficulty: 'intermediate',
       questionText: `How do you ensure AI-generated work for ${deptId.replace(/_/g, ' ')} maintains your company\'s brand voice and standards?`,
       type: 'multiple_choice',
       options: [
@@ -365,22 +250,15 @@ function generateL3Questions(deptId) {
         { id: 'd', text: 'I use the AI output as-is — it\'s usually close enough and editing takes too long to be worthwhile', points: 0 },
       ],
     },
-    {
-      id: `${m.code}-L3-010`, department: deptId, level: 3, weight: 1.0, difficulty: 'advanced',
-      questionText: 'How often do you experiment with new AI tools, features, or techniques?',
-      type: 'frequency',
-      options: [
-        { id: 'never', text: 'Never — I stick with what I know works', points: 0 },
-        { id: 'rarely', text: 'Rarely — maybe once a quarter', points: 1 },
-        { id: 'sometimes', text: 'Monthly — when I hear about something interesting', points: 3 },
-        { id: 'often', text: 'Weekly — I set aside time to explore', points: 4 },
-        { id: 'always', text: 'Constantly — I actively follow AI news and test new tools regularly', points: 5 },
-      ],
-    },
   ];
 }
 
-// Level 4: Strategic Thinking
+// ──────────────────────────────────────────────────────
+// Level 4: Strategic Thinking (6 questions)
+// Tests: H/A/R classification confidence, risk awareness,
+//        adoption strategy, ROI measurement,
+//        future vision, ethical AI
+// ──────────────────────────────────────────────────────
 function generateL4Questions(deptId) {
   const m = deptMeta[deptId];
   return [
@@ -420,17 +298,6 @@ function generateL4Questions(deptId) {
     },
     {
       id: `${m.code}-L4-004`, department: deptId, level: 4, weight: 1.0, difficulty: 'advanced',
-      questionText: 'How should roles and job descriptions evolve as AI takes on more tasks in your department?',
-      type: 'multiple_choice',
-      options: [
-        { id: 'a', text: 'Every role should be redesigned as an "AI operator" position focused primarily on managing and maintaining AI tools and pipelines', points: 1 },
-        { id: 'b', text: 'Roles should shift toward AI oversight, strategic thinking, relationship building, and the uniquely human elements of each function', points: 5 },
-        { id: 'c', text: 'Administrative tasks get removed from JDs, but core responsibilities and team structure should remain essentially the same', points: 2 },
-        { id: 'd', text: 'They shouldn\'t change yet — AI is evolving too fast and any JD changes made now would quickly become outdated', points: 1 },
-      ],
-    },
-    {
-      id: `${m.code}-L4-005`, department: deptId, level: 4, weight: 1.0, difficulty: 'advanced',
       questionText: `How would you measure the ROI of AI adoption in ${deptId.replace(/_/g, ' ')}?`,
       type: 'scenario',
       options: [
@@ -441,18 +308,7 @@ function generateL4Questions(deptId) {
       ],
     },
     {
-      id: `${m.code}-L4-006`, department: deptId, level: 4, weight: 1.0, difficulty: 'advanced',
-      questionText: 'What governance framework does your organization need for responsible AI use?',
-      type: 'multiple_choice',
-      options: [
-        { id: 'a', text: 'A strict policy that bans all AI usage until the legal and compliance team has individually approved each use case and tool', points: 1 },
-        { id: 'b', text: 'Data governance, approved tool list, use case guidelines, quality standards, ethical guidelines, audit trails, and a continuous improvement process', points: 5 },
-        { id: 'c', text: 'Data classification rules, an approved tool list, and general usage guidelines that cover the main risk areas', points: 3 },
-        { id: 'd', text: 'Basic rules about what confidential data can and cannot be shared with AI tools — the rest can be self-governed', points: 2 },
-      ],
-    },
-    {
-      id: `${m.code}-L4-007`, department: deptId, level: 4, weight: 1.0, difficulty: 'advanced',
+      id: `${m.code}-L4-005`, department: deptId, level: 4, weight: 1.0, difficulty: 'advanced',
       questionText: `A senior leader asks: "What will our ${deptId.replace(/_/g, ' ')} team look like in 3 years with AI?" How do you respond?`,
       type: 'scenario',
       options: [
@@ -463,29 +319,7 @@ function generateL4Questions(deptId) {
       ],
     },
     {
-      id: `${m.code}-L4-008`, department: deptId, level: 4, weight: 1.0, difficulty: 'advanced',
-      questionText: 'How should organizations handle the change management aspects of AI adoption?',
-      type: 'multiple_choice',
-      options: [
-        { id: 'a', text: 'Make AI adoption a performance review criteria — people will adapt quickly when it affects their evaluations and career progression', points: 1 },
-        { id: 'b', text: 'Provide comprehensive training sessions on all new AI tools, with certification requirements and monthly skills assessments', points: 2 },
-        { id: 'c', text: 'Create a structured plan: address concerns openly, build AI champions, redesign workflows collaboratively, celebrate wins, and measure adoption continuously', points: 5 },
-        { id: 'd', text: 'Start with leadership adoption first — once executives use AI daily, it naturally cascades down through the organization', points: 2 },
-      ],
-    },
-    {
-      id: `${m.code}-L4-009`, department: deptId, level: 4, weight: 1.0, difficulty: 'advanced',
-      questionText: `What competitive advantage does AI give a ${deptId.replace(/_/g, ' ')} team that adopts it effectively?`,
-      type: 'multiple_choice',
-      options: [
-        { id: 'a', text: 'Ability to operate with a significantly smaller team than competitors while maintaining the same output and quality levels', points: 2 },
-        { id: 'b', text: 'Speed — executing every existing process 3-5x faster than competitors who haven\'t adopted AI tools yet', points: 2 },
-        { id: 'c', text: 'Capability improvements: faster innovation, better decisions, personalization at scale, predictive insights, and freeing humans for creative and strategic work', points: 5 },
-        { id: 'd', text: 'Access to proprietary AI-generated insights and data that competitors can\'t replicate without the same training data', points: 1 },
-      ],
-    },
-    {
-      id: `${m.code}-L4-010`, department: deptId, level: 4, weight: 1.0, difficulty: 'advanced',
+      id: `${m.code}-L4-006`, department: deptId, level: 4, weight: 1.0, difficulty: 'advanced',
       questionText: 'How do you think about ethical AI use in your department?',
       type: 'multiple_choice',
       options: [
@@ -498,7 +332,12 @@ function generateL4Questions(deptId) {
   ];
 }
 
-// Level 5: Future Readiness
+// ──────────────────────────────────────────────────────
+// Level 5: Future Readiness (6 questions)
+// Tests: agent management readiness, skills prioritization,
+//        human team role, onboarding design,
+//        AI-first transformation role, AI fluency importance
+// ──────────────────────────────────────────────────────
 function generateL5Questions(deptId) {
   const m = deptMeta[deptId];
   return [
@@ -538,17 +377,6 @@ function generateL5Questions(deptId) {
     },
     {
       id: `${m.code}-L5-004`, department: deptId, level: 5, weight: 1.0, difficulty: 'advanced',
-      questionText: 'How do you stay current with the rapidly evolving AI landscape?',
-      type: 'multiple_choice',
-      options: [
-        { id: 'a', text: 'I wait for our company\'s IT or innovation team to evaluate new tools and tell us when something is worth adopting', points: 0 },
-        { id: 'b', text: 'I systematically track AI developments, experiment weekly with new tools, contribute to communities, and help my organization anticipate changes', points: 5 },
-        { id: 'c', text: 'I follow several AI influencers and newsletters so I\'m always aware of the latest model releases and funding announcements', points: 2 },
-        { id: 'd', text: 'I regularly read AI news, try new tools when I hear about them, and discuss developments with colleagues', points: 3 },
-      ],
-    },
-    {
-      id: `${m.code}-L5-005`, department: deptId, level: 5, weight: 1.0, difficulty: 'advanced',
       questionText: 'How would you design a new team member\'s onboarding to include AI fluency from day one?',
       type: 'scenario',
       options: [
@@ -559,30 +387,7 @@ function generateL5Questions(deptId) {
       ],
     },
     {
-      id: `${m.code}-L5-006`, department: deptId, level: 5, weight: 1.0, difficulty: 'advanced',
-      questionText: `How do you feel about the AI transformation of ${deptId.replace(/_/g, ' ')}?`,
-      type: 'likert',
-      options: [
-        { id: '1', text: 'Concerned — I worry about the disruption and uncertainty it brings', points: 1 },
-        { id: '2', text: 'Skeptical — I\'m not convinced it will live up to the hype for our function', points: 2 },
-        { id: '3', text: 'Cautiously optimistic — I see potential but also real challenges', points: 3 },
-        { id: '4', text: 'Excited — I see genuine opportunity to improve how we work', points: 4 },
-        { id: '5', text: 'Deeply motivated — I want to actively lead and shape this transformation', points: 5 },
-      ],
-    },
-    {
-      id: `${m.code}-L5-007`, department: deptId, level: 5, weight: 1.0, difficulty: 'advanced',
-      questionText: 'How do you think about building resilience against AI disruption in your career?',
-      type: 'multiple_choice',
-      options: [
-        { id: 'a', text: 'I\'m focused on becoming an AI power user — the people who master the tools will always be in demand regardless of how AI evolves', points: 2 },
-        { id: 'b', text: 'I\'m developing a combination of deep domain expertise, AI fluency, and uniquely human capabilities that position me to design and lead human-AI collaboration', points: 5 },
-        { id: 'c', text: 'I\'m not concerned — my role requires too much human judgment and relationship skills for AI to meaningfully disrupt it', points: 0 },
-        { id: 'd', text: 'I\'m learning to code and understand ML fundamentals so I can transition into a more technical, AI-adjacent role if needed', points: 2 },
-      ],
-    },
-    {
-      id: `${m.code}-L5-008`, department: deptId, level: 5, weight: 1.0, difficulty: 'advanced',
+      id: `${m.code}-L5-005`, department: deptId, level: 5, weight: 1.0, difficulty: 'advanced',
       questionText: `Your CEO announces the company will become "AI-first" in 12 months. What\'s your role in the ${deptId.replace(/_/g, ' ')} transformation?`,
       type: 'scenario',
       options: [
@@ -593,7 +398,7 @@ function generateL5Questions(deptId) {
       ],
     },
     {
-      id: `${m.code}-L5-009`, department: deptId, level: 5, weight: 1.0, difficulty: 'advanced',
+      id: `${m.code}-L5-006`, department: deptId, level: 5, weight: 1.0, difficulty: 'advanced',
       questionText: 'How important is it for professionals in your role to understand AI capabilities and limitations — even if they\'re not building AI?',
       type: 'likert',
       options: [
@@ -602,17 +407,6 @@ function generateL5Questions(deptId) {
         { id: '3', text: 'Moderately important — it helps me work more effectively', points: 3 },
         { id: '4', text: 'Very important — it\'s rapidly becoming a core competency', points: 4 },
         { id: '5', text: 'Critical — AI fluency is now as essential as computer literacy was 20 years ago', points: 5 },
-      ],
-    },
-    {
-      id: `${m.code}-L5-010`, department: deptId, level: 5, weight: 1.0, difficulty: 'advanced',
-      questionText: 'What would be the most valuable investment to prepare your team for the AI-transformed future?',
-      type: 'multiple_choice',
-      options: [
-        { id: 'a', text: 'Enterprise AI platform licenses with the most advanced models available and unlimited usage for every team member', points: 1 },
-        { id: 'b', text: 'Hiring dedicated AI specialists and prompt engineers to embed within the team and handle all AI-related workflows', points: 2 },
-        { id: 'c', text: 'Building the team\'s ability to design human-AI collaborative systems — combining deep domain expertise with AI fluency to reimagine how work gets done', points: 5 },
-        { id: 'd', text: 'Intensive technical training (coding, data science, ML fundamentals) for the entire team so everyone can build custom AI solutions', points: 2 },
       ],
     },
   ];
