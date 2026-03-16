@@ -9,6 +9,7 @@ import {
 import { getAllAssessments } from '../../db/database';
 import { departments } from '../../data/departments';
 import { northStarTargets, tierDefinitions } from '../../data/northStar';
+import { exportDashboardPDF } from '../../utils/pdfExport';
 
 export default function OrgDashboard() {
   const [assessments, setAssessments] = useState([]);
@@ -87,6 +88,16 @@ export default function OrgDashboard() {
 
   return (
     <div className="space-y-8">
+      {/* Export Button */}
+      <div className="flex justify-end">
+        <button
+          onClick={() => exportDashboardPDF(assessments, departments, northStarTargets, tierDefinitions)}
+          className="px-5 py-2.5 rounded-xl bg-accent-purple hover:bg-accent-purple/80 text-white text-sm font-medium transition-all"
+        >
+          📄 Export Dashboard PDF
+        </button>
+      </div>
+
       {/* Summary */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[

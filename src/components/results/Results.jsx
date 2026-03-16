@@ -6,6 +6,7 @@ import { getAssessment } from '../../db/database';
 import { getDepartmentById } from '../../data/departments';
 import { classifications } from '../../data/aiClassification';
 import { northStarTargets, getTierForScore } from '../../data/northStar';
+import { exportResultsPDF } from '../../utils/pdfExport';
 
 export default function Results() {
   const { id } = useParams();
@@ -240,6 +241,12 @@ export default function Results() {
 
       {/* Actions */}
       <div className="flex flex-wrap gap-4 justify-center pb-8">
+        <button
+          onClick={() => exportResultsPDF(assessment, department, tier, assessment.gapAnalysis)}
+          className="px-6 py-3 rounded-xl bg-accent-purple hover:bg-accent-purple/80 text-white font-medium transition-all"
+        >
+          📄 Export PDF Report
+        </button>
         <Link
           to="/dashboard"
           className="px-6 py-3 rounded-xl bg-bg-card hover:bg-bg-card-hover border border-border text-text-primary no-underline font-medium"

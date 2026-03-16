@@ -361,6 +361,13 @@ export const departments = [
   },
 ];
 
+// Apply enrichments to all department activities
+import { enrichActivities } from './activityEnrichments';
+
+departments.forEach(dept => {
+  dept.activities = enrichActivities(dept.activities);
+});
+
 export const getDepartmentById = (id) => departments.find(d => d.id === id);
 export const getDepartmentRoles = (id) => getDepartmentById(id)?.roles || [];
 export const getDepartmentActivities = (id) => getDepartmentById(id)?.activities || [];
