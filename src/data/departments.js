@@ -415,6 +415,34 @@ export const departments = [
     ],
     metrics: ['First Response Time', 'Mean Time to Resolution (MTTR)', 'CSAT Score', 'Ticket Volume', 'First Contact Resolution Rate', 'SLA Compliance', 'Ticket Deflection Rate', 'Agent Utilization', 'Escalation Rate'],
   },
+  {
+    id: 'c_suite',
+    name: 'C-Suite / Executive',
+    icon: '👔',
+    mission: 'Set organizational vision and strategy, drive company-wide AI transformation, make high-stakes decisions, manage board and investor relationships, and ensure sustainable growth.',
+    roles: [
+      'CEO', 'CTO', 'CFO', 'COO', 'CRO', 'CMO', 'CPO', 'CISO',
+      'Chief AI Officer', 'Chief Data Officer', 'Chief Strategy Officer',
+      'EVP / SVP', 'General Manager', 'Board Member'
+    ],
+    activities: [
+      { id: 'csu_strategy', name: 'Corporate strategy & vision setting', description: 'Defining long-term company direction, market positioning, and growth strategy', classification: 'humanize', rationale: 'Requires visionary thinking, market intuition, stakeholder alignment, and bold judgment calls' },
+      { id: 'csu_board', name: 'Board management & reporting', description: 'Preparing board decks, managing governance, and communicating company performance', classification: 'agentify', rationale: 'AI drafts board materials from data; executive owns narrative, framing, and stakeholder relationships' },
+      { id: 'csu_investor', name: 'Investor relations & fundraising', description: 'Managing investor communications, earnings calls, and capital raises', classification: 'agentify', rationale: 'AI prepares data-driven materials and monitors sentiment; human owns relationship and negotiation' },
+      { id: 'csu_ma', name: 'M&A evaluation & due diligence', description: 'Evaluating acquisition targets, partnerships, and strategic investments', classification: 'agentify', rationale: 'AI accelerates financial modeling and market analysis; executive makes strategic judgment calls' },
+      { id: 'csu_org_design', name: 'Organizational design & talent strategy', description: 'Designing org structure, succession planning, and talent development', classification: 'humanize', rationale: 'Requires deep understanding of people, culture, and organizational dynamics' },
+      { id: 'csu_ai_strategy', name: 'Enterprise AI strategy & governance', description: 'Setting company-wide AI adoption strategy, policies, and investment priorities', classification: 'humanize', rationale: 'Requires cross-functional vision, risk assessment, and alignment of AI with business goals' },
+      { id: 'csu_financial_planning', name: 'Financial planning & capital allocation', description: 'Annual budgeting, resource allocation, and financial forecasting', classification: 'agentify', rationale: 'AI builds models and scenarios; executive makes allocation decisions based on strategy' },
+      { id: 'csu_risk', name: 'Enterprise risk management', description: 'Identifying, assessing, and mitigating business risks across the organization', classification: 'agentify', rationale: 'AI monitors risk signals and models scenarios; executive sets risk appetite and response' },
+      { id: 'csu_culture', name: 'Culture & change management', description: 'Driving organizational culture, managing transformation, and leading through change', classification: 'humanize', rationale: 'Requires empathy, communication, trust-building, and authentic leadership' },
+      { id: 'csu_market_intel', name: 'Market intelligence & competitive strategy', description: 'Monitoring competitive landscape, market trends, and emerging threats', classification: 'agentify', rationale: 'AI aggregates and analyzes market data; executive synthesizes into strategic decisions' },
+      { id: 'csu_exec_comms', name: 'Executive communications & thought leadership', description: 'Keynotes, all-hands, external thought leadership, and media engagement', classification: 'agentify', rationale: 'AI drafts content and analyzes audience; executive owns voice, authenticity, and presence' },
+      { id: 'csu_reporting', name: 'Executive dashboards & KPI tracking', description: 'Monitoring company-wide KPIs, OKRs, and performance metrics', classification: 'automate', rationale: 'Real-time dashboards and anomaly detection can be fully automated' },
+      { id: 'csu_partnerships', name: 'Strategic partnerships & ecosystem', description: 'Building and managing strategic partnerships, alliances, and ecosystem relationships', classification: 'humanize', rationale: 'Requires relationship building, trust, negotiation, and strategic judgment' },
+      { id: 'csu_compliance', name: 'Regulatory compliance & AI ethics', description: 'Ensuring compliance with regulations and establishing ethical AI frameworks', classification: 'agentify', rationale: 'AI monitors regulatory changes and flags compliance gaps; executive sets policy and tone' },
+    ],
+    metrics: ['Revenue Growth', 'EBITDA Margin', 'Market Share', 'Customer Retention (NRR)', 'Employee Engagement Score', 'AI Adoption Rate', 'Board Confidence Score', 'Strategic Initiative Completion', 'Innovation Pipeline Value'],
+  },
 ];
 
 // Apply enrichments to all department activities

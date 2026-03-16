@@ -86,6 +86,11 @@ const DEPT_PROFILES = {
     roles: ['VP Support', 'Support Manager', 'Senior Support Engineer', 'Support Engineer', 'Technical Support Specialist', 'Escalation Manager'],
     count: 8,
   },
+  c_suite: {
+    means: [82, 60, 45, 80, 75, 38], variance: 16,
+    roles: ['CEO', 'CTO', 'CFO', 'COO', 'CRO', 'CMO', 'CPO', 'CISO', 'Chief AI Officer', 'Chief Data Officer'],
+    count: 5,
+  },
 };
 
 const DIMENSION_KEYS = ['awareness', 'currentUsage', 'skillDepth', 'strategicThinking', 'futureReadiness', 'technicalFluency'];
@@ -159,7 +164,7 @@ function makeGapAnalysis(department, scores) {
     value_engineering: 4.0, product_management: 4.5, engineering: 4.5,
     product_design: 3.5, customer_education: 3.5, demo_engineering: 4.0,
     industry_strategy: 4.0, revenue_operations: 4.0, enablement: 3.5,
-    customer_success: 4.0, support: 4.5,
+    customer_success: 4.0, support: 4.5, c_suite: 3.5,
   };
   const targetMaturity = targets[department] || 3.5;
   const gap = Math.round((targetMaturity - currentMaturity) * 10) / 10;

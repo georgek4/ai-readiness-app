@@ -19,6 +19,7 @@ const deptMeta = {
   enablement: { code: 'EN', tools: ['Gong', 'Highspot', 'Seismic', 'ChatGPT', 'Lessonly', 'Mindtickle', 'Allego'], workflows: ['onboarding design', 'content creation', 'call coaching', 'certification programs', 'competitive training', 'skills assessment'] },
   customer_success: { code: 'CS', tools: ['Gainsight', 'Totango', 'ChurnZero', 'Vitally', 'ChatGPT', 'Salesforce', 'Catalyst', 'Planhat'], workflows: ['customer onboarding', 'health scoring', 'QBR preparation', 'renewal management', 'adoption tracking', 'expansion identification', 'churn prevention', 'digital engagement'] },
   support: { code: 'SUP', tools: ['Zendesk', 'Intercom', 'Freshdesk', 'ServiceNow', 'ChatGPT', 'Ada', 'Forethought', 'Assembled'], workflows: ['ticket triage', 'first-response resolution', 'advanced troubleshooting', 'knowledge base management', 'chatbot management', 'incident management', 'SLA monitoring', 'root cause analysis'] },
+  c_suite: { code: 'CSU', tools: ['ChatGPT', 'Claude', 'Perplexity', 'Tableau', 'Power BI', 'Notion AI', 'Gamma', 'Beautiful.ai'], workflows: ['strategic planning', 'board reporting', 'investor relations', 'M&A evaluation', 'organizational design', 'AI strategy', 'financial forecasting', 'executive communications'] },
 };
 
 // ──────────────────────────────────────────────────────

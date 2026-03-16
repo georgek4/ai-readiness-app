@@ -22,6 +22,7 @@ export const northStarTargets = {
   enablement: { level: 3.5, transformation: 'AI delivers micro-learning, coaching insights, content recommendations. Humans own program design, live training, coaching culture.' },
   customer_success: { level: 4.0, transformation: 'AI handles health scoring, digital engagement, renewal tracking, and QBR prep. Humans own strategic relationships, executive alignment, and complex save plays.' },
   support: { level: 4.5, transformation: 'AI handles ticket triage, Tier 1 resolution, knowledge base generation, and SLA monitoring. Humans own complex troubleshooting, incident management, and customer empathy.' },
+  c_suite: { level: 3.5, transformation: 'AI handles market intelligence, financial modeling, board material drafting, and KPI monitoring. Executives own vision, strategy, culture, relationships, and high-stakes decision-making.' },
 };
 
 export const tierDefinitions = [
