@@ -54,18 +54,20 @@ export default function DataManagement() {
 
   const handleSeedData = async () => {
     setSeeding(true);
-    setSeedStatus('Generating sample data... 0 / 73');
+    setSeedStatus('Generating sample data...');
     try {
       const result = await seedSampleData((saved, total) => {
         setSeedStatus(`Saving assessments... ${saved} / ${total}`);
       });
-      setSeedStatus(result.ok
-        ? `Done! ${result.message}`
-        : `Completed with issues: ${result.message}`
-      );
+      if (result && result.ok) {
+        setSeedStatus(`Done! ${result.message || 'Sample data created successfully.'}`);
+      } else {
+        setSeedStatus(`Issue: ${(result && result.message) || 'Unknown error during seeding. Check browser console.'}`);
+      }
       load();
     } catch (err) {
-      setSeedStatus(`Error: ${err.message}`);
+      console.error('[DataMgmt] Seed error:', err);
+      setSeedStatus(`Error: ${err.message || String(err)}`);
     }
     setSeeding(false);
   };
