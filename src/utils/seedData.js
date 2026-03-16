@@ -1,15 +1,17 @@
 /**
  * Seed Data Generator — Realistic anonymized SaaS AI readiness assessment data
  * Based on general industry trends in AI adoption across SaaS departments (2024-2026)
+ *
+ * Saves through the main saveAssessment pipeline (local + cloud sync),
+ * so data always appears in the dashboard regardless of cloud status.
  */
 
-import { cloudSaveAssessment, getSupabaseClient } from '../db/supabase';
+import { saveAssessment } from '../db/database';
 import { calculateOverallScore } from './scoring';
 import { getTierForScore } from '../data/northStar';
 
 // Department-level score profiles based on real SaaS AI adoption trends
 // Each entry: [awareness, currentUsage, skillDepth, strategicThinking, futureReadiness, technicalFluency]
-// Ranges represent mean ± variance for that department
 const DEPT_PROFILES = {
   marketing: {
     means: [72, 68, 55, 60, 58, 42],
@@ -98,7 +100,6 @@ function clamp(val, min, max) {
 }
 
 function gaussian() {
-  // Box-Muller transform for normal distribution
   const u1 = Math.random();
   const u2 = Math.random();
   return Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
@@ -111,15 +112,6 @@ function generateScores(means, variance) {
     scores[DIMENSION_KEYS[i]] = clamp(Math.round(mean + noise), 5, 100);
   });
   return scores;
-}
-
-function randomDate(daysBack = 90) {
-  const now = new Date();
-  const offset = Math.floor(Math.random() * daysBack);
-  const d = new Date(now.getTime() - offset * 86400000);
-  // Add some hour variation
-  d.setHours(8 + Math.floor(Math.random() * 10), Math.floor(Math.random() * 60));
-  return d.toISOString();
 }
 
 function generateRoadmap(scores) {
@@ -166,7 +158,6 @@ function generateGapAnalysis(department, scores) {
 }
 
 function calculateXP(scores) {
-  // Approximate XP from scores
   const total = Object.values(scores).reduce((a, b) => a + b, 0);
   return Math.round(total * 2.5 + Math.random() * 200);
 }
@@ -183,9 +174,13 @@ function calculateBadges(scores) {
   return badges;
 }
 
-export function generateSeedAssessments() {
+/**
+ * Seed sample data using the main saveAssessment pipeline.
+ * This ensures data is saved locally (IndexedDB + localStorage) AND synced to cloud.
+ * The dashboard will always see the data regardless of Supabase connectivity.
+ */
+export async function seedSampleData(onProgress) {
   const assessments = [];
-  let userCounter = 1;
 
   Object.entries(DEPT_PROFILES).forEach(([deptId, profile]) => {
     for (let i = 0; i < profile.count; i++) {
@@ -193,11 +188,8 @@ export function generateSeedAssessments() {
       const overallScore = calculateOverallScore(scores);
       const tier = getTierForScore(overallScore);
       const role = profile.roles[Math.floor(Math.random() * profile.roles.length)];
-      const anonymousId = `User_${String(userCounter).padStart(3, '0')}`;
-      userCounter++;
 
       assessments.push({
-        anonymousId,
         name: '',
         department: deptId,
         role,
@@ -210,42 +202,29 @@ export function generateSeedAssessments() {
         badges: calculateBadges(scores),
         gapAnalysis: generateGapAnalysis(deptId, scores),
         roadmap: generateRoadmap(scores),
-        timestamp: randomDate(90),
       });
     }
   });
 
-  return assessments;
-}
-
-export async function seedToSupabase() {
-  const client = getSupabaseClient();
-  if (!client) {
-    return { ok: false, error: 'Supabase not configured' };
-  }
-
-  const assessments = generateSeedAssessments();
   let saved = 0;
   let errors = 0;
+  const total = assessments.length;
 
   for (const a of assessments) {
     try {
-      const result = await cloudSaveAssessment(a);
-      if (result) {
-        saved++;
-      } else {
-        errors++;
-      }
+      await saveAssessment(a);
+      saved++;
+      if (onProgress) onProgress(saved, total);
     } catch (err) {
-      console.error('[Seed] Failed to save:', err);
+      console.error('[Seed] Failed to save assessment:', err);
       errors++;
     }
   }
 
   return {
     ok: errors === 0,
-    message: `Seeded ${saved} assessments (${errors} errors) across ${Object.keys(DEPT_PROFILES).length} departments`,
-    total: assessments.length,
+    message: `Seeded ${saved} of ${total} assessments across ${Object.keys(DEPT_PROFILES).length} departments${errors > 0 ? ` (${errors} errors)` : ''}`,
+    total,
     saved,
     errors,
   };

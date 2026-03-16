@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { getAllAssessments, exportData, importData, clearAllData, deleteAssessment } from '../../db/database';
 import { departments } from '../../data/departments';
-import { seedToSupabase } from '../../utils/seedData';
+import { seedSampleData } from '../../utils/seedData';
 
 export default function DataManagement() {
   const [assessments, setAssessments] = useState([]);
@@ -54,9 +54,11 @@ export default function DataManagement() {
 
   const handleSeedData = async () => {
     setSeeding(true);
-    setSeedStatus('Generating and uploading sample data...');
+    setSeedStatus('Generating sample data... 0 / 73');
     try {
-      const result = await seedToSupabase();
+      const result = await seedSampleData((saved, total) => {
+        setSeedStatus(`Saving assessments... ${saved} / ${total}`);
+      });
       setSeedStatus(result.ok
         ? `Done! ${result.message}`
         : `Completed with issues: ${result.message}`
