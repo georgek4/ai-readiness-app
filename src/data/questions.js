@@ -1,494 +1,538 @@
 // AI Readiness Assessment Question Bank
-// 390 questions: 13 departments × 5 levels × 6 questions each
-// Trimmed from 50→30 per assessment to eliminate repetition
-// Anti-gaming: randomized correct positions, plausible distractors, trap answers
+// 16 departments × 6 levels × 6 questions = 576 questions
+// Anti-gaming: graduated scoring, plausible distractors, randomized correct positions,
+// "trap" answers that sound impressive but miss the point, department-specific scenarios
+//
+// Scoring philosophy: All options have graduated points (0-5). No option is obviously absurd.
+// Even "wrong" answers represent common, understandable perspectives.
 
 const deptMeta = {
-  marketing: { code: 'MKT', tools: ['ChatGPT', 'Jasper', 'Copy.ai', 'HubSpot AI', 'Midjourney', 'DALL-E', 'Grammarly AI', 'Surfer SEO'], workflows: ['content creation', 'campaign management', 'SEO', 'email marketing', 'social media', 'analytics', 'lead scoring', 'A/B testing'] },
-  sales: { code: 'SAL', tools: ['Gong', 'Outreach', 'Salesloft', 'ChatGPT', 'LinkedIn Sales Nav', 'Clari', 'People.ai', 'ZoomInfo'], workflows: ['prospecting', 'outreach', 'discovery calls', 'pipeline management', 'forecasting', 'CRM updates', 'proposal creation', 'deal review'] },
-  presales: { code: 'PRE', tools: ['Consensus', 'Demostack', 'ChatGPT', 'Loopio', 'RFPIO', 'Reprise', 'Navattic'], workflows: ['demo preparation', 'RFP responses', 'POC management', 'technical discovery', 'competitive positioning', 'security questionnaires'] },
-  professional_services: { code: 'PS', tools: ['Monday.com AI', 'Smartsheet', 'ChatGPT', 'Jira', 'Confluence AI', 'MS Project', 'Asana AI'], workflows: ['project planning', 'data migration', 'configuration', 'training delivery', 'status reporting', 'resource planning'] },
-  value_engineering: { code: 'VE', tools: ['ChatGPT', 'Excel AI', 'Tableau', 'Power BI', 'Google Sheets AI', 'Notion AI'], workflows: ['business case building', 'ROI modeling', 'benchmark research', 'value realization tracking', 'EBR preparation'] },
-  product_management: { code: 'PM', tools: ['ChatGPT', 'Notion AI', 'Productboard', 'Amplitude', 'Mixpanel', 'Figma AI', 'Linear', 'Jira'], workflows: ['PRD writing', 'user research synthesis', 'roadmap planning', 'sprint planning', 'data analysis', 'competitor monitoring'] },
-  engineering: { code: 'ENG', tools: ['GitHub Copilot', 'Cursor', 'Claude', 'ChatGPT', 'Tabnine', 'Snyk AI', 'Datadog AI', 'SonarQube'], workflows: ['code writing', 'code review', 'testing', 'debugging', 'CI/CD', 'monitoring', 'documentation', 'architecture design'] },
-  product_design: { code: 'DES', tools: ['Figma AI', 'Midjourney', 'DALL-E', 'Adobe Firefly', 'Uizard', 'Galileo AI', 'ChatGPT'], workflows: ['wireframing', 'prototyping', 'user research', 'accessibility auditing', 'design system maintenance', 'visual design'] },
-  customer_education: { code: 'EDU', tools: ['ChatGPT', 'Synthesia', 'Descript', 'Loom AI', 'Notion AI', 'DeepL', 'Grammarly AI'], workflows: ['documentation writing', 'video production', 'course creation', 'content localization', 'release notes', 'community management'] },
-  demo_engineering: { code: 'DMO', tools: ['Reprise', 'Navattic', 'Demostack', 'ChatGPT', 'Faker.js', 'Terraform', 'GitHub Actions', 'Lucidchart', 'Miro'], workflows: ['demo data generation', 'environment provisioning', 'interactive demo building', 'video production', 'demo analytics', 'solution design', 'solution architecture', 'customer requirements analysis'] },
-  industry_strategy: { code: 'IND', tools: ['ChatGPT', 'Perplexity', 'AlphaSense', 'Gartner AI', 'CB Insights', 'Notion AI'], workflows: ['trend analysis', 'thought leadership', 'industry content creation', 'benchmark research', 'advisory board facilitation'] },
-  revenue_operations: { code: 'REV', tools: ['Salesforce Einstein', 'Clari', 'Gong', 'LeanData', 'ChatGPT', 'Tableau', 'dbt'], workflows: ['CRM administration', 'pipeline analytics', 'forecasting', 'territory planning', 'data enrichment', 'reporting'] },
-  enablement: { code: 'EN', tools: ['Gong', 'Highspot', 'Seismic', 'ChatGPT', 'Lessonly', 'Mindtickle', 'Allego'], workflows: ['onboarding design', 'content creation', 'call coaching', 'certification programs', 'competitive training', 'skills assessment'] },
-  customer_success: { code: 'CS', tools: ['Gainsight', 'Totango', 'ChurnZero', 'Vitally', 'ChatGPT', 'Salesforce', 'Catalyst', 'Planhat'], workflows: ['customer onboarding', 'health scoring', 'QBR preparation', 'renewal management', 'adoption tracking', 'expansion identification', 'churn prevention', 'digital engagement'] },
-  support: { code: 'SUP', tools: ['Zendesk', 'Intercom', 'Freshdesk', 'ServiceNow', 'ChatGPT', 'Ada', 'Forethought', 'Assembled'], workflows: ['ticket triage', 'first-response resolution', 'advanced troubleshooting', 'knowledge base management', 'chatbot management', 'incident management', 'SLA monitoring', 'root cause analysis'] },
-  c_suite: { code: 'CSU', tools: ['ChatGPT', 'Claude', 'Perplexity', 'Tableau', 'Power BI', 'Notion AI', 'Gamma', 'Beautiful.ai'], workflows: ['strategic planning', 'board reporting', 'investor relations', 'M&A evaluation', 'organizational design', 'AI strategy', 'financial forecasting', 'executive communications'] },
+  marketing: { code: 'MKT', label: 'marketing', tools: ['ChatGPT', 'Jasper', 'Copy.ai', 'HubSpot AI', 'Midjourney', 'DALL-E', 'Grammarly AI', 'Surfer SEO'], workflows: ['content creation', 'campaign management', 'SEO optimization', 'email marketing', 'social media strategy', 'analytics reporting', 'lead scoring', 'A/B testing'] },
+  sales: { code: 'SAL', label: 'sales', tools: ['Gong', 'Outreach', 'Salesloft', 'ChatGPT', 'LinkedIn Sales Nav', 'Clari', 'People.ai', 'ZoomInfo'], workflows: ['prospecting', 'outreach sequences', 'discovery calls', 'pipeline management', 'forecasting', 'CRM hygiene', 'proposal creation', 'deal review'] },
+  presales: { code: 'PRE', label: 'presales / solutions engineering', tools: ['Consensus', 'Demostack', 'ChatGPT', 'Loopio', 'RFPIO', 'Reprise', 'Navattic'], workflows: ['demo preparation', 'RFP responses', 'POC management', 'technical discovery', 'competitive positioning', 'security questionnaires'] },
+  professional_services: { code: 'PS', label: 'professional services', tools: ['Monday.com AI', 'Smartsheet', 'ChatGPT', 'Jira', 'Confluence AI', 'MS Project', 'Asana AI'], workflows: ['project planning', 'data migration', 'configuration management', 'training delivery', 'status reporting', 'resource planning'] },
+  value_engineering: { code: 'VE', label: 'value engineering', tools: ['ChatGPT', 'Excel AI', 'Tableau', 'Power BI', 'Google Sheets AI', 'Notion AI'], workflows: ['business case building', 'ROI modeling', 'benchmark research', 'value realization tracking', 'EBR preparation'] },
+  product_management: { code: 'PM', label: 'product management', tools: ['ChatGPT', 'Notion AI', 'Productboard', 'Amplitude', 'Mixpanel', 'Figma AI', 'Linear', 'Jira'], workflows: ['PRD writing', 'user research synthesis', 'roadmap planning', 'sprint planning', 'data analysis', 'competitor monitoring'] },
+  engineering: { code: 'ENG', label: 'engineering', tools: ['GitHub Copilot', 'Cursor', 'Claude', 'ChatGPT', 'Tabnine', 'Snyk AI', 'Datadog AI', 'SonarQube'], workflows: ['code writing', 'code review', 'testing', 'debugging', 'CI/CD pipeline management', 'monitoring', 'documentation', 'architecture design'] },
+  product_design: { code: 'DES', label: 'product design', tools: ['Figma AI', 'Midjourney', 'DALL-E', 'Adobe Firefly', 'Uizard', 'Galileo AI', 'ChatGPT'], workflows: ['wireframing', 'prototyping', 'user research', 'accessibility auditing', 'design system maintenance', 'visual design'] },
+  customer_education: { code: 'EDU', label: 'customer education', tools: ['ChatGPT', 'Synthesia', 'Descript', 'Loom AI', 'Notion AI', 'DeepL', 'Grammarly AI'], workflows: ['documentation writing', 'video production', 'course creation', 'content localization', 'release notes', 'community management'] },
+  demo_engineering: { code: 'DMO', label: 'demo & solution engineering', tools: ['Reprise', 'Navattic', 'Demostack', 'ChatGPT', 'Faker.js', 'Terraform', 'GitHub Actions', 'Lucidchart', 'Miro'], workflows: ['demo data generation', 'environment provisioning', 'interactive demo building', 'video production', 'demo analytics', 'solution design', 'solution architecture', 'customer requirements analysis'] },
+  industry_strategy: { code: 'IND', label: 'industry strategy', tools: ['ChatGPT', 'Perplexity', 'AlphaSense', 'Gartner AI', 'CB Insights', 'Notion AI'], workflows: ['trend analysis', 'thought leadership content', 'industry research', 'benchmark research', 'advisory board facilitation'] },
+  revenue_operations: { code: 'REV', label: 'revenue operations', tools: ['Salesforce Einstein', 'Clari', 'Gong', 'LeanData', 'ChatGPT', 'Tableau', 'dbt'], workflows: ['CRM administration', 'pipeline analytics', 'forecasting models', 'territory planning', 'data enrichment', 'dashboard reporting'] },
+  enablement: { code: 'EN', label: 'enablement', tools: ['Gong', 'Highspot', 'Seismic', 'ChatGPT', 'Lessonly', 'Mindtickle', 'Allego'], workflows: ['onboarding design', 'content creation', 'call coaching', 'certification programs', 'competitive training', 'skills assessment'] },
+  customer_success: { code: 'CS', label: 'customer success', tools: ['Gainsight', 'Totango', 'ChurnZero', 'Vitally', 'ChatGPT', 'Salesforce', 'Catalyst', 'Planhat'], workflows: ['customer onboarding', 'health scoring', 'QBR preparation', 'renewal management', 'adoption tracking', 'expansion identification', 'churn prevention', 'digital engagement'] },
+  support: { code: 'SUP', label: 'support', tools: ['Zendesk', 'Intercom', 'Freshdesk', 'ServiceNow', 'ChatGPT', 'Ada', 'Forethought', 'Assembled'], workflows: ['ticket triage', 'first-response resolution', 'advanced troubleshooting', 'knowledge base management', 'chatbot management', 'incident management', 'SLA monitoring', 'root cause analysis'] },
+  c_suite: { code: 'CSU', label: 'executive leadership', tools: ['ChatGPT', 'Claude', 'Perplexity', 'Tableau', 'Power BI', 'Notion AI', 'Gamma', 'Beautiful.ai'], workflows: ['strategic planning', 'board reporting', 'investor relations', 'M&A evaluation', 'organizational design', 'AI strategy', 'financial forecasting', 'executive communications'] },
 };
+
+// Seeded PRNG (mulberry32) for deterministic but well-distributed shuffling
+function mulberry32(seed) {
+  let t = seed | 0;
+  return function () {
+    t = (t + 0x6D2B79F5) | 0;
+    let x = Math.imul(t ^ (t >>> 15), 1 | t);
+    x = (x + Math.imul(x ^ (x >>> 7), 61 | x)) ^ x;
+    return ((x ^ (x >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function shuffleOptions(options, seed) {
+  const s = seed.split('').reduce((a, c, i) => a + c.charCodeAt(0) * (i + 1), 0);
+  const rng = mulberry32(s);
+  const arr = [...options];
+  // Fisher-Yates shuffle with proper PRNG
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
 
 // ──────────────────────────────────────────────────────
 // Level 1: AI Awareness (6 questions)
-// Tests: definition, tool familiarity, hallucination,
-//        H/A/R framework, content accuracy, automation judgment
+// Tests foundational understanding of AI concepts,
+// tool awareness, and limitations — tailored per dept
 // ──────────────────────────────────────────────────────
 function generateL1Questions(deptId) {
   const m = deptMeta[deptId];
+  const dept = m.label;
+  const t1 = m.tools[0], t2 = m.tools[1], t3 = m.tools[2];
+  const w1 = m.workflows[0], w2 = m.workflows[1], w3 = m.workflows[2];
+
   return [
     {
       id: `${m.code}-L1-001`, department: deptId, level: 1, weight: 1.0, difficulty: 'beginner',
-      questionText: `Which of the following best describes generative AI as it applies to ${deptId.replace(/_/g, ' ')}?`,
+      questionText: `A ${dept} team member says: "AI can now fully replace humans for ${w1}." How would you assess this claim?`,
       type: 'multiple_choice',
-      options: [
-        { id: 'a', text: 'AI that can create new content, analyze data, and assist with knowledge work based on patterns learned from training data', points: 5 },
-        { id: 'b', text: 'An advanced machine learning system that autonomously writes code, manages databases, and replaces entire business processes end-to-end', points: 1 },
-        { id: 'c', text: 'A database that stores and retrieves information using natural language queries instead of SQL commands', points: 1 },
-        { id: 'd', text: 'Software that follows pre-programmed decision trees and rules to complete tasks without any learning capability', points: 0 },
-      ],
+      options: shuffleOptions([
+        { id: 'a', text: `That's accurate — AI tools like ${t1} have advanced rapidly and can now handle ${w1} end-to-end with minimal human involvement in most standard scenarios`, points: 1 },
+        { id: 'b', text: `AI can significantly assist with ${w1}, but human oversight is still needed for quality, context, and judgment`, points: 5 },
+        { id: 'c', text: `AI isn't reliable enough for ${w1} yet — the technology still produces too many errors and hallucinations to be trusted with real deliverables without major rework`, points: 1 },
+        { id: 'd', text: `It depends entirely on the specific AI tool and model version being used — some of the latest releases can handle ${w1} fully while older versions can't`, points: 2 },
+      ], `${m.code}-L1-001`),
     },
     {
       id: `${m.code}-L1-002`, department: deptId, level: 1, weight: 1.0, difficulty: 'beginner',
-      questionText: `How familiar are you with AI tools commonly used in ${deptId.replace(/_/g, ' ')} (e.g., ${m.tools.slice(0, 3).join(', ')})?`,
-      type: 'self_rating',
-      options: [
-        { id: '1', text: "I haven't heard of any of these tools", points: 1 },
-        { id: '2', text: "I've heard of them but never used them", points: 2 },
-        { id: '3', text: "I've tried one or two briefly", points: 3 },
-        { id: '4', text: 'I use at least one regularly', points: 4 },
-        { id: '5', text: 'I use multiple AI tools as part of my daily workflow', points: 5 },
-      ],
+      questionText: `Which of these ${dept} scenarios best illustrates an "AI hallucination" problem?`,
+      type: 'multiple_choice',
+      options: shuffleOptions([
+        { id: 'a', text: `Using ${t1} to draft ${w1} content and it produces text in a completely wrong formatting style that doesn't match what you asked for`, points: 1 },
+        { id: 'b', text: `AI confidently cites a specific statistic in a ${dept} deliverable, but the number doesn't exist — it was fabricated`, points: 5 },
+        { id: 'c', text: `The AI tool crashes or times out when processing a large ${dept} dataset because the file size exceeds the system's upload or context limits`, points: 0 },
+        { id: 'd', text: `AI generates multiple variations of ${w2} content and each version uses slightly different phrasing, tone, and emphasis even with the same prompt`, points: 1 },
+      ], `${m.code}-L1-002`),
     },
     {
       id: `${m.code}-L1-003`, department: deptId, level: 1, weight: 1.0, difficulty: 'beginner',
-      questionText: 'What is an "AI hallucination"?',
-      type: 'multiple_choice',
+      questionText: `How familiar are you with AI tools used in ${dept} (e.g., ${t1}, ${t2}, ${t3})?`,
+      type: 'self_rating',
       options: [
-        { id: 'a', text: 'A visual artifact that appears when AI generates images using diffusion models at low resolution settings', points: 1 },
-        { id: 'b', text: 'When an AI system crashes or produces error messages due to exceeding its computational limits', points: 0 },
-        { id: 'c', text: 'When AI generates information that sounds plausible and confident but is factually incorrect or entirely fabricated', points: 5 },
-        { id: 'd', text: 'A deliberate feature where AI creates imaginative, creative content that goes beyond the literal prompt instructions', points: 1 },
+        { id: '1', text: "I haven't heard of most of these tools", points: 1 },
+        { id: '2', text: "I recognize the names but haven't used them", points: 2 },
+        { id: '3', text: "I've tried one or two for basic tasks", points: 3 },
+        { id: '4', text: 'I use at least one regularly in my workflow', points: 4 },
+        { id: '5', text: 'I use multiple AI tools daily and understand their strengths and limitations', points: 5 },
       ],
     },
     {
       id: `${m.code}-L1-004`, department: deptId, level: 1, weight: 1.0, difficulty: 'beginner',
-      questionText: 'Which statement about AI-generated content is most accurate?',
+      questionText: `In the "Humanize / Agentify / Automate" framework, which of these ${dept} activities is the best example of "Agentify"?`,
       type: 'multiple_choice',
-      options: [
-        { id: 'a', text: 'AI-generated content is always factually accurate because the models are trained on verified information sources and peer-reviewed data', points: 0 },
-        { id: 'b', text: 'AI-generated content is identical every time you give it the same prompt, making it reliable and consistent across all uses', points: 1 },
-        { id: 'c', text: 'AI can now generate content that is indistinguishable from expert human work, making human review unnecessary for most applications', points: 0 },
-        { id: 'd', text: 'AI-generated content should be reviewed by a human for accuracy, tone, and appropriateness before being used', points: 5 },
-      ],
+      options: shuffleOptions([
+        { id: 'a', text: `Running ${w3} end-to-end without any human involvement, using scheduled automation, predefined rules, and triggered workflows`, points: 2 },
+        { id: 'b', text: `Having AI draft ${w1} deliverables while a human reviews and approves each output`, points: 5 },
+        { id: 'c', text: `A senior team member personally handling ${w2} because it requires deep relationship skills, strategic judgment, and contextual awareness`, points: 1 },
+        { id: 'd', text: `Using AI to check spelling, grammar, and basic compliance in ${dept} documents before they're distributed to stakeholders`, points: 0 },
+      ], `${m.code}-L1-004`),
     },
     {
       id: `${m.code}-L1-005`, department: deptId, level: 1, weight: 1.0, difficulty: 'beginner',
-      questionText: 'In the Humanize / Agentify / Automate framework, what does "Agentify" mean?',
+      questionText: `Your team just adopted ${t1} for ${dept} work. A colleague says the outputs are "always accurate because it was trained on reliable data." What's the most useful response?`,
       type: 'multiple_choice',
-      options: [
-        { id: 'a', text: 'Outsourcing the task to a third-party agency or freelancer who uses AI tools on your behalf to deliver faster results', points: 0 },
-        { id: 'b', text: 'Fully automating the task with zero human involvement so it runs on autopilot 24/7 without any oversight needed', points: 2 },
-        { id: 'c', text: 'Delegating the task to an AI agent that works semi-autonomously with human oversight at key decision points', points: 5 },
-        { id: 'd', text: 'Assigning the task to a dedicated human agent who specializes in AI-assisted execution and acts as a liaison between teams', points: 0 },
-      ],
+      options: shuffleOptions([
+        { id: 'a', text: `That's mostly correct — ${t1} is trained on extensive, high-quality datasets and the latest models have dramatically reduced error rates compared to earlier versions`, points: 1 },
+        { id: 'b', text: `AI outputs should always be verified — models can generate plausible content that's wrong or outdated`, points: 5 },
+        { id: 'c', text: `The accuracy depends heavily on which specific model version and settings you're using — newer releases with the right configuration are significantly more reliable`, points: 2 },
+        { id: 'd', text: `You should cross-check every important output with a second AI tool for validation — if both independently produce the same answer, the information is reliable enough to use`, points: 1 },
+      ], `${m.code}-L1-005`),
     },
     {
       id: `${m.code}-L1-006`, department: deptId, level: 1, weight: 1.0, difficulty: 'beginner',
-      questionText: `Which of these ${deptId.replace(/_/g, ' ')} tasks would be LEAST suitable for full AI automation?`,
+      questionText: `Which ${dept} task would benefit MOST from AI assistance while still requiring significant human judgment?`,
       type: 'multiple_choice',
-      options: [
-        { id: 'a', text: 'Scheduling meetings and managing calendar invitations across multiple time zones and stakeholder groups', points: 0 },
-        { id: 'b', text: 'Strategic decision-making that requires empathy, organizational context, and navigating ambiguity', points: 5 },
-        { id: 'c', text: 'Generating standard weekly reports from dashboards and existing data sources using predefined templates', points: 0 },
-        { id: 'd', text: 'Data entry, CRM field updates, and syncing information between systems based on defined rules', points: 0 },
-      ],
+      options: shuffleOptions([
+        { id: 'a', text: `Scheduling ${dept} team meetings across time zones and sending automated calendar invitations based on availability`, points: 0 },
+        { id: 'b', text: `${m.workflows[3].charAt(0).toUpperCase() + m.workflows[3].slice(1)} — AI provides analysis and drafts, humans decide`, points: 5 },
+        { id: 'c', text: `Formatting ${dept} documents and deliverables according to company templates, brand guidelines, and standard compliance requirements`, points: 0 },
+        { id: 'd', text: `Syncing data between ${dept} tools, deduplicating records, and keeping systems of record up to date based on predefined mapping rules`, points: 0 },
+      ], `${m.code}-L1-006`),
     },
   ];
 }
 
 // ──────────────────────────────────────────────────────
 // Level 2: Current Usage (6 questions)
-// Tests: frequency, typical approach, data sensitivity,
-//        helping others, time savings, team integration
+// Tests actual usage patterns, workflows, data handling,
+// and real-world AI integration — deeply dept-specific
 // ──────────────────────────────────────────────────────
 function generateL2Questions(deptId) {
   const m = deptMeta[deptId];
+  const dept = m.label;
+  const w1 = m.workflows[0], w2 = m.workflows[1], w3 = m.workflows[2];
+
   return [
     {
       id: `${m.code}-L2-001`, department: deptId, level: 2, weight: 1.0, difficulty: 'beginner',
-      questionText: `How frequently do you currently use AI tools in your ${deptId.replace(/_/g, ' ')} work?`,
+      questionText: `How frequently do you currently use AI tools in your ${dept} work?`,
       type: 'frequency',
       options: [
-        { id: 'never', text: 'Never — I do everything manually', points: 0 },
-        { id: 'rarely', text: 'Rarely — I tried it once or twice', points: 1 },
+        { id: 'never', text: 'Never — I haven\'t incorporated AI into my workflow', points: 0 },
+        { id: 'rarely', text: 'Rarely — I\'ve experimented once or twice', points: 1 },
         { id: 'sometimes', text: 'A few times per month for specific tasks', points: 2 },
-        { id: 'often', text: 'Multiple times per week across different tasks', points: 4 },
-        { id: 'always', text: 'Daily — AI is part of my standard workflow', points: 5 },
+        { id: 'often', text: 'Multiple times per week across different workflows', points: 4 },
+        { id: 'always', text: 'Daily — AI is embedded in my standard workflow', points: 5 },
       ],
     },
     {
       id: `${m.code}-L2-002`, department: deptId, level: 2, weight: 1.0, difficulty: 'intermediate',
-      questionText: `When you use AI to assist with ${m.workflows[0]}, what is your typical approach?`,
+      questionText: `You're using AI to help with ${w1}. The output is decent but not quite right. What happens next?`,
       type: 'scenario',
-      options: [
-        { id: 'a', text: 'I provide detailed context, iterate on the output, and refine until quality matches my standards', points: 4 },
-        { id: 'b', text: "I don't use AI for this workflow yet", points: 0 },
-        { id: 'c', text: 'I have refined prompt templates with structured context, systematic review process, and documented best practices I can share', points: 5 },
-        { id: 'd', text: 'I type in a basic request and use whatever output I get, maybe with light editing', points: 2 },
-      ],
+      options: shuffleOptions([
+        { id: 'a', text: 'I use the output as-is with minor edits — getting 80% of the way there quickly is more valuable than perfecting it', points: 2 },
+        { id: 'b', text: 'I revise my prompt with more specific context, examples, and constraints, then iterate until the output meets my standards', points: 4 },
+        { id: 'c', text: 'I have a systematic process: refined prompts, structured review criteria, and documented templates I\'ve built over time for this exact workflow', points: 5 },
+        { id: 'd', text: 'I set the AI output aside and do it manually — it\'s faster than going back and forth with the tool', points: 1 },
+      ], `${m.code}-L2-002`),
     },
     {
       id: `${m.code}-L2-003`, department: deptId, level: 2, weight: 1.0, difficulty: 'intermediate',
-      questionText: 'How do you currently handle sensitive or confidential data when using AI tools?',
+      questionText: `A ${dept} project requires you to use AI with customer data and internal metrics. How do you proceed?`,
       type: 'multiple_choice',
-      options: [
-        { id: 'a', text: 'I always use the most advanced AI model available and trust its built-in security features to protect any data I input', points: 0 },
-        { id: 'b', text: 'I follow our data classification policy, only use approved enterprise AI tools for sensitive data, and anonymize when needed', points: 5 },
-        { id: 'c', text: "I haven't given much thought to data sensitivity when using AI tools — I use whatever is fastest", points: 0 },
-        { id: 'd', text: 'I try to avoid putting sensitive data in AI tools but I don\'t have a formal process — it\'s mostly gut feeling', points: 2 },
-      ],
+      options: shuffleOptions([
+        { id: 'a', text: 'I use only approved enterprise AI tools, anonymize sensitive fields, and follow our data classification policy', points: 5 },
+        { id: 'b', text: 'I avoid using AI for anything involving real data — it\'s safer to only use AI for general tasks without specific data inputs', points: 2 },
+        { id: 'c', text: 'I use whatever AI tool is most capable for the task — the AI companies have strong security, so the data is protected', points: 0 },
+        { id: 'd', text: 'I check with IT before each use to get approval, which means I only use AI for data-related tasks occasionally', points: 3 },
+      ], `${m.code}-L2-003`),
     },
     {
       id: `${m.code}-L2-004`, department: deptId, level: 2, weight: 1.0, difficulty: 'intermediate',
-      questionText: 'How would you estimate the time savings from your current AI tool usage?',
+      questionText: `How has AI tangibly changed the way you approach ${w2}?`,
       type: 'multiple_choice',
-      options: [
-        { id: 'a', text: 'Significant — saves me 5+ hours per week on tasks I was already doing', points: 5 },
-        { id: 'b', text: 'Moderate — saves me 2-5 hours per week across several workflows', points: 4 },
-        { id: 'c', text: 'Minimal — maybe 30 minutes per week at most', points: 2 },
-        { id: 'd', text: 'No measurable savings — I don\'t use AI regularly or it doesn\'t noticeably help yet', points: 0 },
-      ],
+      options: shuffleOptions([
+        { id: 'a', text: `I do ${w2} the same way as before — AI hasn't changed this workflow for me`, points: 0 },
+        { id: 'b', text: 'I occasionally use AI to speed up parts of it, but my core approach is the same', points: 2 },
+        { id: 'c', text: `I've redesigned how I approach ${w2} — AI handles the first pass and I focus on strategy, refinement, and quality`, points: 4 },
+        { id: 'd', text: `I've built a complete AI-assisted system for ${w2} with templates, quality checks, and documented processes my team can replicate`, points: 5 },
+      ], `${m.code}-L2-004`),
     },
     {
       id: `${m.code}-L2-005`, department: deptId, level: 2, weight: 1.0, difficulty: 'intermediate',
-      questionText: `A colleague asks for help getting started with AI for ${m.workflows[1]}. What do you do?`,
+      questionText: `A new team member in ${dept} asks how they should start using AI. What do you recommend?`,
       type: 'scenario',
-      options: [
-        { id: 'a', text: 'I show them specific tools and prompts I use, walk through a live example, and check in later to see how it\'s going', points: 4 },
-        { id: 'b', text: 'I suggest they try ChatGPT and send them a few blog posts, but I can\'t give hands-on guidance for their specific workflow', points: 2 },
-        { id: 'c', text: 'I recommend they immediately adopt a full AI-powered tech stack with automated pipelines and API integrations for maximum efficiency', points: 1 },
-        { id: 'd', text: 'I honestly can\'t help much — I\'m still figuring out AI tools myself and wouldn\'t want to steer them wrong', points: 0 },
-      ],
+      options: shuffleOptions([
+        { id: 'a', text: 'I point them to some online tutorials and suggest they experiment on their own — self-directed exploration is the best way to learn', points: 1 },
+        { id: 'b', text: `I walk them through specific AI workflows for ${dept} tasks, share my prompts, and check in to see how it's going`, points: 4 },
+        { id: 'c', text: 'I suggest they wait until the team has an official AI training program — ad hoc adoption can create bad habits', points: 1 },
+        { id: 'd', text: 'I\'m still figuring it out myself, so I\'d suggest they ask someone more experienced with AI tools', points: 0 },
+      ], `${m.code}-L2-005`),
     },
     {
       id: `${m.code}-L2-006`, department: deptId, level: 2, weight: 1.0, difficulty: 'intermediate',
-      questionText: 'How integrated is AI into your team\'s standard operating procedures?',
+      questionText: `How embedded is AI in your ${dept} team's standard operating procedures?`,
       type: 'multiple_choice',
-      options: [
-        { id: 'a', text: 'Partially — AI is part of some documented workflows but not systematically embedded across all processes', points: 3 },
-        { id: 'b', text: 'Extensively — AI tools and practices are built into most of our standard workflows and onboarding', points: 5 },
-        { id: 'c', text: 'Not at all — AI is not mentioned in any of our SOPs or process documentation', points: 0 },
-        { id: 'd', text: 'Minimally — a few individuals use AI on their own initiative but it\'s not part of our official processes', points: 1 },
-      ],
+      options: shuffleOptions([
+        { id: 'a', text: 'Not at all — our SOPs don\'t reference AI tools or AI-assisted workflows', points: 0 },
+        { id: 'b', text: 'A few individuals use AI on their own initiative, but it\'s not officially part of our processes', points: 1 },
+        { id: 'c', text: 'AI is included in some documented workflows but adoption is inconsistent across the team', points: 3 },
+        { id: 'd', text: 'AI is systematically built into our processes with documented prompts, tool guidelines, and onboarding materials', points: 5 },
+      ], `${m.code}-L2-006`),
     },
   ];
 }
 
 // ──────────────────────────────────────────────────────
 // Level 3: Skill Depth (6 questions)
-// Tests: debugging output, handling inconsistency,
-//        evaluating accuracy, building workflows,
-//        handling limitations, maintaining standards
+// Tests ability to debug, iterate, evaluate quality,
+// build workflows, and handle limitations — dept-specific
 // ──────────────────────────────────────────────────────
 function generateL3Questions(deptId) {
   const m = deptMeta[deptId];
+  const dept = m.label;
+  const t1 = m.tools[0], t2 = m.tools[1];
+  const w1 = m.workflows[0], w2 = m.workflows[1], w3 = m.workflows[2], w4 = m.workflows[3];
+
   return [
     {
       id: `${m.code}-L3-001`, department: deptId, level: 3, weight: 1.0, difficulty: 'intermediate',
-      questionText: 'When an AI tool gives you a poor or irrelevant output, what is your usual response?',
+      questionText: `You're using AI for ${w1} and the output misses important nuances specific to your ${dept} context. What do you do?`,
       type: 'scenario',
-      options: [
-        { id: 'a', text: 'Systematically diagnose why it failed — examine the prompt structure, adjust context and constraints, try alternative approaches like chain-of-thought or task decomposition', points: 5 },
-        { id: 'b', text: 'Switch to a different, more powerful AI model since the current one clearly isn\'t capable enough for this type of task', points: 1 },
-        { id: 'c', text: 'Revise my prompt by adding more specific context, examples, and clearer constraints before trying again', points: 4 },
-        { id: 'd', text: 'Run the same prompt 3-4 more times — AI outputs vary each time, so eventually I\'ll get something usable', points: 2 },
-      ],
+      options: shuffleOptions([
+        { id: 'a', text: 'Add more context about the specific situation, include concrete examples of what good output looks like, and explicitly call out the nuances that matter most', points: 4 },
+        { id: 'b', text: 'Diagnose why it missed the nuances — context gap, framing issue, or model limitation — then adjust accordingly', points: 5 },
+        { id: 'c', text: 'Switch to a more capable AI model — the latest frontier models have much stronger understanding of domain-specific nuance and professional context', points: 1 },
+        { id: 'd', text: 'Manually fix the output directly — sometimes editing the AI\'s work is more efficient than iterating through multiple rounds of prompting for diminishing returns', points: 2 },
+      ], `${m.code}-L3-001`),
     },
     {
       id: `${m.code}-L3-002`, department: deptId, level: 3, weight: 1.0, difficulty: 'intermediate',
-      questionText: `You need to use AI for ${m.workflows[2]} but the output quality is inconsistent. What approach would you take?`,
+      questionText: `You need consistent, high-quality AI outputs for ${w3} across your ${dept} team. How do you achieve this?`,
       type: 'scenario',
-      options: [
-        { id: 'a', text: 'Accept the inconsistency as a fundamental limitation of current AI technology and manually fix outputs each time', points: 1 },
-        { id: 'b', text: 'Break the task into smaller steps with quality checkpoints at each stage, provide examples of good output, and establish validation criteria', points: 5 },
-        { id: 'c', text: 'Fine-tune a custom large language model specifically for this task using your company\'s proprietary data to ensure consistent output quality', points: 1 },
-        { id: 'd', text: 'Create a detailed prompt template with clear constraints, examples of desired output format, and explicit instructions about style and quality', points: 4 },
-      ],
+      options: shuffleOptions([
+        { id: 'a', text: `Standardize on one AI platform for all ${dept} work — consistency comes from everyone using the same tool with the same model and settings`, points: 1 },
+        { id: 'b', text: 'Create detailed prompt templates with instructions, examples, and quality criteria the team can follow', points: 4 },
+        { id: 'c', text: 'Build a system with templates, quality gates, review checkpoints, and a feedback loop', points: 5 },
+        { id: 'd', text: 'Train the team on foundational prompting techniques through a structured workshop, then let each person develop their own approach that suits their style and workflow', points: 2 },
+      ], `${m.code}-L3-002`),
     },
     {
       id: `${m.code}-L3-003`, department: deptId, level: 3, weight: 1.0, difficulty: 'intermediate',
-      questionText: 'How do you evaluate the quality and accuracy of AI-generated output?',
+      questionText: `How do you evaluate whether an AI-generated ${dept} deliverable is ready to share with stakeholders?`,
       type: 'multiple_choice',
-      options: [
-        { id: 'a', text: 'I run it through another AI tool to cross-verify — if two AI systems agree, the output is reliable enough to use without further checks', points: 1 },
-        { id: 'b', text: 'I skim it quickly for obvious errors and typos before using it', points: 2 },
-        { id: 'c', text: 'I review it carefully against known facts, our standards, and check for bias, then verify with domain experts for high-stakes content', points: 5 },
-        { id: 'd', text: 'I generally trust the output since modern AI models have been trained on vast amounts of accurate data', points: 0 },
-      ],
+      options: shuffleOptions([
+        { id: 'a', text: 'I read through it carefully for obvious errors, check that all the main points and requirements are covered, and do a quick sanity check on any numbers', points: 2 },
+        { id: 'b', text: 'I verify facts against sources, check for bias, and have experts review high-stakes content', points: 5 },
+        { id: 'c', text: 'I run it through a second AI tool to cross-check — if two independent models produce substantially the same output, the content is reliable enough to share', points: 1 },
+        { id: 'd', text: 'I focus on tone, formatting, and brand alignment — AI factual content is generally reliable for standard business deliverables that don\'t involve novel claims', points: 1 },
+      ], `${m.code}-L3-003`),
     },
     {
       id: `${m.code}-L3-004`, department: deptId, level: 3, weight: 1.0, difficulty: 'advanced',
-      questionText: `Your manager asks you to create a reusable AI workflow for ${m.workflows[3]}. What do you deliver?`,
+      questionText: `Your manager asks you to create a reusable AI-assisted workflow for ${w4} that the whole ${dept} team can use. What do you deliver?`,
       type: 'scenario',
-      options: [
-        { id: 'a', text: 'A fully autonomous AI system that runs the entire workflow end-to-end without any human touchpoints, saving the team maximum time', points: 1 },
-        { id: 'b', text: 'A structured playbook with prompt templates, tool recommendations, step-by-step instructions, and examples of expected output quality', points: 4 },
-        { id: 'c', text: 'I\'m not sure how to create a reusable AI workflow — I\'d need to research this first before committing to a deliverable', points: 1 },
-        { id: 'd', text: 'A complete workflow system with prompt templates, tool integrations, quality gates, training materials, and metrics to track effectiveness', points: 5 },
-      ],
+      options: shuffleOptions([
+        { id: 'a', text: `A detailed recommendation document covering which AI tool to use for ${w4}, configuration best practices, and tips for getting consistently good results`, points: 1 },
+        { id: 'b', text: 'A structured playbook with prompt templates, step-by-step instructions, and quality examples', points: 4 },
+        { id: 'c', text: 'A system with templates, quality gates, metrics, and training materials', points: 5 },
+        { id: 'd', text: 'A fully automated end-to-end pipeline that handles the entire workflow autonomously — eliminating manual steps to maximize time savings and consistency', points: 1 },
+      ], `${m.code}-L3-004`),
     },
     {
       id: `${m.code}-L3-005`, department: deptId, level: 3, weight: 1.0, difficulty: 'intermediate',
-      questionText: 'How do you handle AI tool limitations (e.g., context window limits, outdated training data)?',
+      questionText: `You're trying to use AI to analyze a very long ${dept} document but the tool can't process it all at once. How do you handle this?`,
       type: 'multiple_choice',
-      options: [
-        { id: 'a', text: 'I understand key limitations and have specific strategies for each — chunking long documents, using RAG for current data, web search for recent info', points: 4 },
-        { id: 'b', text: 'I\'m not aware of these limitations — I assume AI tools can handle whatever I give them', points: 0 },
-        { id: 'c', text: 'I design my workflows to account for limitations proactively, choosing the right tool for each task based on its specific capabilities and constraints', points: 5 },
-        { id: 'd', text: 'I know limitations exist and work around them on the fly, but I don\'t have systematic strategies for dealing with them', points: 2 },
-      ],
+      options: shuffleOptions([
+        { id: 'a', text: 'I chunk the document strategically and process each section with targeted questions', points: 5 },
+        { id: 'b', text: 'I paste the whole document in and let the AI process what it can — most tools handle truncation gracefully and prioritize the most relevant sections automatically', points: 0 },
+        { id: 'c', text: 'I create a detailed manual summary of the key points first, then provide that condensed version to the AI as the foundation for analysis', points: 2 },
+        { id: 'd', text: 'I switch to a frontier model with a larger context window — Claude\'s 200K tokens or Gemini\'s 1M tokens can handle most business documents in a single pass', points: 3 },
+      ], `${m.code}-L3-005`),
     },
     {
       id: `${m.code}-L3-006`, department: deptId, level: 3, weight: 1.0, difficulty: 'intermediate',
-      questionText: `How do you ensure AI-generated work for ${deptId.replace(/_/g, ' ')} maintains your company\'s brand voice and standards?`,
+      questionText: `How do you ensure AI-generated ${dept} content matches your company's voice, standards, and domain expertise?`,
       type: 'multiple_choice',
-      options: [
-        { id: 'a', text: 'I include brand voice guidelines, tone examples, and formatting rules in my prompts so the AI gets it right from the start', points: 4 },
-        { id: 'b', text: 'I don\'t worry about brand voice — I manually rewrite everything the AI generates to match our style anyway', points: 2 },
-        { id: 'c', text: 'I\'ve built comprehensive prompt templates incorporating brand guidelines, tone samples, do/don\'t lists, and quality checklists', points: 5 },
-        { id: 'd', text: 'I use the AI output as-is — it\'s usually close enough and editing takes too long to be worthwhile', points: 0 },
-      ],
+      options: shuffleOptions([
+        { id: 'a', text: 'I include brand guidelines, tone examples, and formatting rules directly in my prompts', points: 4 },
+        { id: 'b', text: 'I\'ve built comprehensive prompt templates with brand guidelines, "do/don\'t" examples, quality checklists, and domain-specific terminology', points: 5 },
+        { id: 'c', text: 'I rewrite the AI output to match our voice — it\'s faster than trying to get the AI to match it perfectly', points: 2 },
+        { id: 'd', text: 'Modern AI tools already produce professional-quality content that works for most situations without much customization', points: 0 },
+      ], `${m.code}-L3-006`),
     },
   ];
 }
 
 // ──────────────────────────────────────────────────────
 // Level 4: Strategic Thinking (6 questions)
-// Tests: H/A/R classification confidence, risk awareness,
-//        adoption strategy, ROI measurement,
-//        future vision, ethical AI
+// Tests ability to think about AI at the organizational
+// level — strategy, ROI, risk, transformation vision
 // ──────────────────────────────────────────────────────
 function generateL4Questions(deptId) {
   const m = deptMeta[deptId];
+  const dept = m.label;
+  const w1 = m.workflows[0], w2 = m.workflows[1];
+
   return [
     {
       id: `${m.code}-L4-001`, department: deptId, level: 4, weight: 1.0, difficulty: 'advanced',
-      questionText: `If you were to classify every activity in your ${deptId.replace(/_/g, ' ')} department as Humanize, Agentify, or Automate, how confident are you in making those classifications?`,
+      questionText: `How confident are you in classifying every ${dept} activity as Humanize, Agentify, or Automate — and defending those classifications?`,
       type: 'self_rating',
       options: [
-        { id: '1', text: 'Not confident — I\'m not sure how to apply this framework', points: 1 },
-        { id: '2', text: 'Slightly confident — I could classify a few obvious ones', points: 2 },
-        { id: '3', text: 'Moderately confident — I could classify most activities with some thought', points: 3 },
-        { id: '4', text: 'Very confident — I understand the nuances and edge cases', points: 4 },
-        { id: '5', text: 'Extremely confident — I can classify, justify, and debate borderline cases', points: 5 },
+        { id: '1', text: 'I\'m not sure how to apply this framework to our specific activities', points: 1 },
+        { id: '2', text: 'I could classify the obvious ones but would struggle with borderline cases', points: 2 },
+        { id: '3', text: 'I could classify most activities with reasonable confidence', points: 3 },
+        { id: '4', text: 'I understand the nuances and could defend my classifications with clear reasoning', points: 4 },
+        { id: '5', text: 'I can classify, justify, debate edge cases, and explain how classifications will evolve over time', points: 5 },
       ],
     },
     {
       id: `${m.code}-L4-002`, department: deptId, level: 4, weight: 1.0, difficulty: 'advanced',
-      questionText: `What is the biggest risk of AI adoption in ${deptId.replace(/_/g, ' ')} that organizations should plan for?`,
+      questionText: `Your ${dept} team is excited about AI but moving fast without guardrails. What's the most important risk to address first?`,
       type: 'multiple_choice',
-      options: [
-        { id: 'a', text: 'AI models becoming so capable that they make the entire department obsolete within 2-3 years, requiring radical organizational restructuring', points: 0 },
-        { id: 'b', text: 'Vendor lock-in — once you build workflows on one AI platform, switching costs become prohibitively expensive', points: 2 },
-        { id: 'c', text: 'Over-reliance on AI without proper governance, leading to quality degradation, data risks, or erosion of critical human skills', points: 5 },
-        { id: 'd', text: 'The total cost of AI subscriptions, training, and infrastructure exceeding the productivity gains for most teams', points: 2 },
-      ],
+      options: shuffleOptions([
+        { id: 'a', text: 'The total cost of AI subscriptions, training programs, and infrastructure potentially exceeding the quantifiable productivity gains for the team', points: 2 },
+        { id: 'b', text: 'Over-reliance without governance — risking quality issues, data exposure, or skill erosion', points: 5 },
+        { id: 'c', text: 'Vendor lock-in — if the team builds critical workflows entirely on one AI platform, switching costs become prohibitive when pricing changes or better alternatives emerge', points: 2 },
+        { id: 'd', text: 'Team members spending excessive time experimenting with new AI tools and techniques instead of focusing on their core deliverables and KPIs', points: 1 },
+      ], `${m.code}-L4-002`),
     },
     {
       id: `${m.code}-L4-003`, department: deptId, level: 4, weight: 1.0, difficulty: 'advanced',
-      questionText: `You\'re asked to create an AI adoption strategy for your ${deptId.replace(/_/g, ' ')} team. Which approach is most effective?`,
+      questionText: `You're building an AI adoption strategy for ${dept}. Two team members disagree: one wants to go all-in immediately, the other wants to wait for better tools. What approach do you recommend?`,
       type: 'scenario',
-      options: [
-        { id: 'a', text: 'Deploy enterprise AI across all workflows simultaneously with mandatory adoption targets to ensure the team doesn\'t fall behind competitors', points: 1 },
-        { id: 'b', text: 'Start with one high-impact workflow, prove measurable value, then expand systematically based on learnings', points: 5 },
-        { id: 'c', text: 'Invest heavily in building custom AI models trained on your company\'s proprietary data before rolling anything out to the team', points: 1 },
-        { id: 'd', text: 'Let individual team members experiment freely with whatever AI tools they choose, then standardize around whatever gets the most organic adoption', points: 2 },
-      ],
+      options: shuffleOptions([
+        { id: 'a', text: 'Start with one high-impact workflow, prove value, then expand systematically', points: 5 },
+        { id: 'b', text: 'Let each person decide their own adoption pace and timeline — forcing AI adoption on reluctant team members typically backfires and creates resentment', points: 2 },
+        { id: 'c', text: 'Go all-in across the department — the team that adopts fastest gains a compounding competitive advantage, and hesitation is the bigger risk in a fast-moving market', points: 1 },
+        { id: 'd', text: 'Wait 6 months for the landscape to stabilize — investing heavily in today\'s rapidly-evolving tools risks significant wasted effort when better alternatives inevitably arrive', points: 0 },
+      ], `${m.code}-L4-003`),
     },
     {
       id: `${m.code}-L4-004`, department: deptId, level: 4, weight: 1.0, difficulty: 'advanced',
-      questionText: `How would you measure the ROI of AI adoption in ${deptId.replace(/_/g, ' ')}?`,
+      questionText: `Your VP asks: "How do we measure whether AI is actually helping our ${dept} team?" What framework do you propose?`,
       type: 'scenario',
-      options: [
-        { id: 'a', text: 'Track the ratio of AI tool subscription costs versus the headcount reduction those tools enabled over a 12-month period', points: 2 },
-        { id: 'b', text: 'Measure time savings, quality improvements, output volume, error rates, employee satisfaction, and strategic value like faster decisions and innovation', points: 5 },
-        { id: 'c', text: 'I\'m not sure how to measure AI ROI — it\'s hard to isolate AI\'s impact from other productivity factors', points: 0 },
-        { id: 'd', text: 'Focus on time savings per task — calculate hours saved across the team and multiply by average hourly compensation rate', points: 3 },
-      ],
+      options: shuffleOptions([
+        { id: 'a', text: 'Track hours saved per week across the team and multiply by average hourly compensation cost — this gives a clear, quantifiable dollar value that leadership can act on', points: 3 },
+        { id: 'b', text: 'Compare output volume before and after AI adoption — measuring throughput increases across key deliverables gives the most tangible evidence of impact', points: 1 },
+        { id: 'c', text: 'Measure time savings, quality improvements, error rates, satisfaction, and strategic value', points: 5 },
+        { id: 'd', text: 'It\'s very difficult to isolate AI\'s specific impact from other productivity factors — better to track overall team performance metrics holistically and attribute proportionally', points: 1 },
+      ], `${m.code}-L4-004`),
     },
     {
       id: `${m.code}-L4-005`, department: deptId, level: 4, weight: 1.0, difficulty: 'advanced',
-      questionText: `A senior leader asks: "What will our ${deptId.replace(/_/g, ' ')} team look like in 3 years with AI?" How do you respond?`,
+      questionText: `A board member asks: "What will ${dept} look like in 3 years with AI?" How do you respond?`,
       type: 'scenario',
-      options: [
-        { id: 'a', text: 'I\'m not sure — AI changes so fast that any prediction would be unreliable, so I\'d suggest we focus on adapting quarter by quarter', points: 1 },
-        { id: 'b', text: 'I describe a vision where AI handles nearly all execution and the team shrinks to a small group of strategists overseeing AI systems', points: 1 },
-        { id: 'c', text: 'I articulate which activities shift to AI agents, which become more human-focused, how roles evolve, what new capabilities we need, and how this improves outcomes', points: 5 },
-        { id: 'd', text: 'I explain the team will be more productive with AI handling routine work and people focusing more on strategy, but the overall structure stays similar', points: 3 },
-      ],
+      options: shuffleOptions([
+        { id: 'a', text: `The team will be significantly more productive while maintaining roughly the same structure — everyone uses AI tools as a daily force multiplier on their existing work`, points: 2 },
+        { id: 'b', text: `AI will handle nearly all execution tasks — the team shrinks considerably and the remaining professionals focus primarily on overseeing, tuning, and maintaining AI systems`, points: 1 },
+        { id: 'c', text: `Activities shift to AI agents, human roles evolve toward strategy, and outcomes improve`, points: 5 },
+        { id: 'd', text: `AI is evolving so rapidly that any 3-year prediction would be unreliable — it's more responsible to focus on quarterly adaptation and stay flexible rather than commit to a speculative vision`, points: 1 },
+      ], `${m.code}-L4-005`),
     },
     {
       id: `${m.code}-L4-006`, department: deptId, level: 4, weight: 1.0, difficulty: 'advanced',
-      questionText: 'How do you think about ethical AI use in your department?',
+      questionText: `A ${dept} colleague uses AI to generate client-facing content without disclosure or review. They say: "It's fine — the output is indistinguishable from human work." What's your response?`,
       type: 'multiple_choice',
-      options: [
-        { id: 'a', text: 'Ethics is primarily the AI vendor\'s responsibility — they should ensure their models are unbiased and safe before releasing them to users', points: 0 },
-        { id: 'b', text: 'I actively consider bias, transparency, and privacy when using AI, advocate for ethical practices, and raise concerns when I see issues', points: 5 },
-        { id: 'c', text: 'I know there are ethical concerns with AI but haven\'t had the time to address them formally in our workflows', points: 2 },
-        { id: 'd', text: 'Our legal and compliance team handles all AI ethics questions — individual practitioners shouldn\'t need to worry about this', points: 0 },
-      ],
+      options: shuffleOptions([
+        { id: 'a', text: 'If the quality is genuinely good and the client is happy, there\'s no practical issue — quality matters more than process', points: 1 },
+        { id: 'b', text: 'I raise concerns about transparency, review processes, and the risk of AI errors reaching clients — and advocate for clear guidelines', points: 5 },
+        { id: 'c', text: 'I flag it to management — using AI for client work without approval could be a compliance issue', points: 3 },
+        { id: 'd', text: 'I agree it\'s fine as long as they personally reviewed it before sending — that provides sufficient quality control', points: 2 },
+      ], `${m.code}-L4-006`),
     },
   ];
 }
 
 // ──────────────────────────────────────────────────────
 // Level 5: Future Readiness (6 questions)
-// Tests: agent management readiness, skills prioritization,
-//        human team role, onboarding design,
-//        AI-first transformation role, AI fluency importance
+// Tests preparedness for AI agents, evolving roles,
+// organizational transformation — dept-specific vision
 // ──────────────────────────────────────────────────────
 function generateL5Questions(deptId) {
   const m = deptMeta[deptId];
+  const dept = m.label;
+  const w1 = m.workflows[0], w2 = m.workflows[1];
+
   return [
     {
       id: `${m.code}-L5-001`, department: deptId, level: 5, weight: 1.0, difficulty: 'advanced',
-      questionText: 'How prepared are you to manage and oversee AI agents that work semi-autonomously?',
+      questionText: `How prepared are you to manage AI agents that work semi-autonomously on ${dept} tasks?`,
       type: 'self_rating',
       options: [
-        { id: '1', text: 'Not prepared — I don\'t understand what AI agents are or how they differ from chatbots', points: 1 },
-        { id: '2', text: 'Slightly prepared — I understand the concept but have no hands-on experience', points: 2 },
-        { id: '3', text: 'Moderately prepared — I\'ve used some AI agents or autonomous tools in limited scenarios', points: 3 },
-        { id: '4', text: 'Well prepared — I regularly oversee AI-powered workflows and intervene when needed', points: 4 },
-        { id: '5', text: 'Expert — I design human-AI collaboration systems and manage complex multi-agent workflows', points: 5 },
+        { id: '1', text: 'I\'m not clear on what AI agents are or how they differ from current AI chat tools', points: 1 },
+        { id: '2', text: 'I understand the concept of AI agents but haven\'t worked with any', points: 2 },
+        { id: '3', text: 'I\'ve experimented with some autonomous AI tools in limited scenarios', points: 3 },
+        { id: '4', text: 'I regularly oversee AI-powered workflows and know when to intervene', points: 4 },
+        { id: '5', text: 'I design human-AI collaboration systems and manage multi-step autonomous workflows', points: 5 },
       ],
     },
     {
       id: `${m.code}-L5-002`, department: deptId, level: 5, weight: 1.0, difficulty: 'advanced',
-      questionText: `As AI agents handle more "Agentify" work in ${deptId.replace(/_/g, ' ')}, what skills should professionals prioritize developing?`,
+      questionText: `As AI agents take over more routine ${dept} tasks, which skills become MORE valuable for the humans on the team?`,
       type: 'multiple_choice',
-      options: [
-        { id: 'a', text: 'Deep technical skills like programming, machine learning, and data science so you can build and customize your own AI systems', points: 2 },
-        { id: 'b', text: 'Uniquely human skills: strategic thinking, empathy, creative problem-solving, complex judgment, and cross-functional leadership', points: 5 },
-        { id: 'c', text: 'Mastery of current AI tools and prompt engineering — becoming the most efficient AI operator in your domain', points: 2 },
-        { id: 'd', text: 'It\'s premature to change skill development strategies — the technology is moving too fast to invest in any specific direction', points: 0 },
-      ],
+      options: shuffleOptions([
+        { id: 'a', text: 'Deep AI technical skills — programming, prompt engineering, model fine-tuning, and system integration become the essential core competency for every professional', points: 2 },
+        { id: 'b', text: 'Strategic thinking, empathy, creative problem-solving, and cross-functional leadership', points: 5 },
+        { id: 'c', text: 'Speed and efficiency with AI tools — the professionals who can operate AI fastest and produce the highest volume of outputs will outperform their peers significantly', points: 1 },
+        { id: 'd', text: 'Quality control and oversight — humans become primarily responsible for reviewing, validating, and approving the growing volume of AI-generated deliverables', points: 2 },
+      ], `${m.code}-L5-002`),
     },
     {
       id: `${m.code}-L5-003`, department: deptId, level: 5, weight: 1.0, difficulty: 'advanced',
-      questionText: `Imagine your ${deptId.replace(/_/g, ' ')} team has AI agents handling all automatable and most agentifiable tasks. What becomes the primary role of the human team?`,
+      questionText: `Imagine AI agents handle most routine ${dept} work in 2-3 years. What becomes the primary role of the human ${dept} professional?`,
       type: 'scenario',
-      options: [
-        { id: 'a', text: 'Quality control — reviewing, approving, and fixing all AI outputs before they reach customers or stakeholders', points: 2 },
-        { id: 'b', text: 'The team would be dramatically smaller, focused mainly on maintaining the AI systems and handling occasional exceptions', points: 1 },
-        { id: 'c', text: 'Strategic direction, relationship building, creative problem-solving, ethical oversight, and navigating novel situations requiring human judgment', points: 5 },
-        { id: 'd', text: 'Same work as today but significantly faster — humans would still do everything, just with AI as a speed multiplier on each task', points: 1 },
-      ],
+      options: shuffleOptions([
+        { id: 'a', text: 'Quality assurance — systematically reviewing, validating, and approving every AI-generated output before it reaches stakeholders, clients, or customers', points: 2 },
+        { id: 'b', text: 'Strategy, relationships, creative problem-solving, and handling novel situations', points: 5 },
+        { id: 'c', text: 'Managing the AI systems themselves — configuring tools, monitoring performance metrics, maintaining workflow automations, and troubleshooting when things break', points: 1 },
+        { id: 'd', text: 'The same fundamental role as today, but executed significantly faster and at higher volume — humans still own every workflow, with AI serving as an acceleration layer', points: 1 },
+      ], `${m.code}-L5-003`),
     },
     {
       id: `${m.code}-L5-004`, department: deptId, level: 5, weight: 1.0, difficulty: 'advanced',
-      questionText: 'How would you design a new team member\'s onboarding to include AI fluency from day one?',
+      questionText: `You're designing onboarding for a new ${dept} hire who will work extensively with AI. How do you structure it?`,
       type: 'scenario',
-      options: [
-        { id: 'a', text: 'Require them to complete an AI certification course before starting any real work, ensuring they have a strong theoretical foundation first', points: 2 },
-        { id: 'b', text: 'Design an immersive program where every onboarding task leverages AI, building fluency naturally as they learn the role with mentorship and progressive challenges', points: 5 },
-        { id: 'c', text: 'Give them access to all our AI tools on day one and let them explore at their own pace — self-directed learning is more effective than structured programs', points: 1 },
-        { id: 'd', text: 'Create a structured AI track with tool training, prompt libraries, best practices docs, and shadowing sessions alongside AI-fluent colleagues', points: 4 },
-      ],
+      options: shuffleOptions([
+        { id: 'a', text: 'Require them to complete AI certification courses before touching real work', points: 2 },
+        { id: 'b', text: `Create a structured AI track with tool training, prompt libraries, and shadowing alongside AI-fluent team members`, points: 4 },
+        { id: 'c', text: 'Give them tool access on day one and let them explore — self-directed learning builds deeper skills', points: 1 },
+        { id: 'd', text: `Design immersive onboarding where every task naturally uses AI, building fluency through practice with mentorship and progressive challenges`, points: 5 },
+      ], `${m.code}-L5-004`),
     },
     {
       id: `${m.code}-L5-005`, department: deptId, level: 5, weight: 1.0, difficulty: 'advanced',
-      questionText: `Your CEO announces the company will become "AI-first" in 12 months. What\'s your role in the ${deptId.replace(/_/g, ' ')} transformation?`,
+      questionText: `Your CEO declares the company will be "AI-first" in 12 months. What's your response as a ${dept} professional?`,
       type: 'scenario',
-      options: [
-        { id: 'a', text: 'Immediately identify the 3-5 highest-impact AI opportunities in my area, build quick proof-of-concepts, and volunteer to lead the pilot program', points: 4 },
-        { id: 'b', text: 'Wait for the transformation team to set direction — jumping ahead without coordination could create inconsistency and wasted effort', points: 0 },
-        { id: 'c', text: 'Map all activities to the H/A/R framework, build the roadmap, champion adoption, measure results, and help redesign the department for AI-human collaboration', points: 5 },
-        { id: 'd', text: 'Focus on upskilling myself first so I can contribute from a position of strength — start with AI certifications and intensive tool training', points: 2 },
-      ],
+      options: shuffleOptions([
+        { id: 'a', text: 'Focus on getting AI-certified first so I can contribute from a position of strength', points: 2 },
+        { id: 'b', text: 'Wait for the transformation team to provide guidance — independent action without coordination could cause problems', points: 0 },
+        { id: 'c', text: `Immediately identify the top 3-5 AI opportunities in ${dept}, build proof-of-concepts, and volunteer to lead pilots`, points: 4 },
+        { id: 'd', text: `Map all ${dept} activities to H/A/R, build a transformation roadmap, champion adoption, measure results, and help redesign team operations`, points: 5 },
+      ], `${m.code}-L5-005`),
     },
     {
       id: `${m.code}-L5-006`, department: deptId, level: 5, weight: 1.0, difficulty: 'advanced',
-      questionText: 'How important is it for professionals in your role to understand AI capabilities and limitations — even if they\'re not building AI?',
+      questionText: `How critical is it for ${dept} professionals to deeply understand AI capabilities and limitations — even if they'll never build AI?`,
       type: 'likert',
       options: [
-        { id: '1', text: 'Not important — AI tooling is IT\'s responsibility to manage', points: 1 },
-        { id: '2', text: 'Nice to know but not essential for my performance', points: 2 },
-        { id: '3', text: 'Moderately important — it helps me work more effectively', points: 3 },
-        { id: '4', text: 'Very important — it\'s rapidly becoming a core competency', points: 4 },
-        { id: '5', text: 'Critical — AI fluency is now as essential as computer literacy was 20 years ago', points: 5 },
+        { id: '1', text: 'Nice to know, but the AI tools should be intuitive enough that deep understanding isn\'t necessary', points: 1 },
+        { id: '2', text: 'Somewhat important — it helps with day-to-day tool usage', points: 2 },
+        { id: '3', text: 'Moderately important — understanding limitations prevents mistakes', points: 3 },
+        { id: '4', text: 'Very important — it\'s quickly becoming a core professional competency', points: 4 },
+        { id: '5', text: 'Essential — AI fluency is now as fundamental as digital literacy', points: 5 },
       ],
     },
   ];
 }
 
 // ──────────────────────────────────────────────────────
-// Level 6: Technical Fluency (6 questions)
-// Tests actual AI tool knowledge: prompt techniques,
-// platform differences, context windows, RAG/projects,
-// model parameters, tool selection for use cases
+// Level 6: Technical Fluency (6 questions) — HIGHEST WEIGHTED SECTION
+// Tests real AI knowledge: prompting techniques, model architecture,
+// tool selection, system design, parameters — dept-specific scenarios
+// All questions are harder with more nuanced distractors
 // ──────────────────────────────────────────────────────
 function generateL6Questions(deptId) {
   const m = deptMeta[deptId];
+  const dept = m.label;
+  const t1 = m.tools[0], t2 = m.tools[1];
+  const w1 = m.workflows[0], w2 = m.workflows[1], w3 = m.workflows[2];
+
   return [
     {
-      id: `${m.code}-L6-001`, department: deptId, level: 6, weight: 1.0, difficulty: 'advanced',
-      questionText: 'What is "few-shot prompting" and when is it most useful?',
+      id: `${m.code}-L6-001`, department: deptId, level: 6, weight: 1.2, difficulty: 'advanced',
+      questionText: `You need AI to classify ${dept} items into categories with consistent formatting every time. Which technique is most reliable?`,
       type: 'multiple_choice',
-      options: [
-        { id: 'a', text: 'A technique where you limit the AI to only a few words in its response, useful when you need concise outputs for dashboards or summaries', points: 0 },
-        { id: 'b', text: 'Including 2-5 examples of desired input/output pairs in your prompt so the AI learns the pattern — most useful for consistent formatting, classification, or style matching', points: 5 },
-        { id: 'c', text: 'Running the same prompt multiple times and selecting the best output from several "shots" — useful when AI output quality is inconsistent', points: 1 },
-        { id: 'd', text: 'A fine-tuning technique where you train the model on a small dataset of a few hundred examples to customize it for your specific domain', points: 1 },
-      ],
+      options: shuffleOptions([
+        { id: 'a', text: 'Write very detailed instructions describing the exact output format, using precise language and explicit constraints — the more specific your description, the more consistent the results', points: 2 },
+        { id: 'b', text: 'Include 3-5 examples of correctly classified and formatted items directly in your prompt so the AI infers the pattern', points: 5 },
+        { id: 'c', text: 'Ask the AI to think step-by-step through its classification reasoning before outputting the final answer in your desired format', points: 3 },
+        { id: 'd', text: 'Fine-tune a custom model on your classification taxonomy — this permanently embeds the format and categories so no prompt engineering is needed', points: 1 },
+      ], `${m.code}-L6-001`),
     },
     {
-      id: `${m.code}-L6-002`, department: deptId, level: 6, weight: 1.0, difficulty: 'advanced',
-      questionText: `You need to research a competitor's latest product announcement from last week and draft a ${deptId.replace(/_/g, ' ')} briefing. Which tool is best suited?`,
+      id: `${m.code}-L6-002`, department: deptId, level: 6, weight: 1.2, difficulty: 'advanced',
+      questionText: `You need to brief your ${dept} team on a competitor's product launch from 3 days ago. What's the most reliable approach?`,
       type: 'scenario',
-      options: [
-        { id: 'a', text: 'Claude — its 200K context window means it can analyze the most data and produce the highest quality output for any research task', points: 1 },
-        { id: 'b', text: 'Perplexity — it searches the live web and cites sources, so it can find recent announcements that LLMs with training data cutoffs would miss', points: 5 },
-        { id: 'c', text: 'ChatGPT with GPT-4 — as the most widely-used AI, it has the most comprehensive training data and will know about recent events', points: 1 },
-        { id: 'd', text: 'GitHub Copilot — its enterprise features include real-time market intelligence and competitive analysis capabilities', points: 0 },
-      ],
+      options: shuffleOptions([
+        { id: 'a', text: `Ask ${t1} directly — frontier LLMs have training data that's updated frequently and can often discuss recent events`, points: 0 },
+        { id: 'b', text: 'Use a web-connected AI (like Perplexity) to gather current sourced information, then synthesize with a strong LLM', points: 5 },
+        { id: 'c', text: 'Use Claude\'s 200K context window — paste in the announcement page, press coverage, and analyst reactions, then ask for a structured briefing synthesis', points: 3 },
+        { id: 'd', text: 'Use Google Gemini since it has direct access to Google Search data and can surface the most recent, relevant web results natively in its responses', points: 2 },
+      ], `${m.code}-L6-002`),
     },
     {
-      id: `${m.code}-L6-003`, department: deptId, level: 6, weight: 1.0, difficulty: 'advanced',
-      questionText: 'You\'re trying to get an AI to analyze a 150-page document, but the model has a 32K token context window. What\'s the best approach?',
-      type: 'scenario',
-      options: [
-        { id: 'a', text: 'Simply paste the entire document — modern AI models automatically summarize inputs that exceed their context window without losing important information', points: 0 },
-        { id: 'b', text: 'Switch to a model with a larger context window (like Claude\'s 200K tokens), or chunk the document into sections with overlap and process each with targeted questions', points: 5 },
-        { id: 'c', text: 'Use the AI\'s built-in file upload feature — uploaded files are stored in a separate memory space that doesn\'t count against the context window', points: 1 },
-        { id: 'd', text: 'Compress the document by removing all formatting, images, and whitespace to reduce the token count below the 32K limit', points: 2 },
-      ],
-    },
-    {
-      id: `${m.code}-L6-004`, department: deptId, level: 6, weight: 1.0, difficulty: 'advanced',
-      questionText: 'What is Retrieval-Augmented Generation (RAG) and how does it differ from fine-tuning?',
+      id: `${m.code}-L6-003`, department: deptId, level: 6, weight: 1.2, difficulty: 'advanced',
+      questionText: `Your ${dept} team wants an AI system that can answer questions about your company's 500+ internal documents. Which approach do you recommend and why?`,
       type: 'multiple_choice',
-      options: [
-        { id: 'a', text: 'RAG and fine-tuning are the same thing — both involve training the AI model on your company\'s proprietary data to improve accuracy and relevance', points: 0 },
-        { id: 'b', text: 'RAG retrieves relevant documents at query time and includes them in the prompt context; fine-tuning permanently modifies the model\'s weights. RAG is better for current data, fine-tuning for changing behavior patterns', points: 5 },
-        { id: 'c', text: 'RAG generates multiple responses and retrieves the best one; fine-tuning adjusts the generation parameters like temperature. RAG improves quality, fine-tuning improves consistency', points: 1 },
-        { id: 'd', text: 'RAG requires a vector database and embedding models, making it more expensive and complex than fine-tuning, which only needs a simple JSON file of examples', points: 2 },
-      ],
+      options: shuffleOptions([
+        { id: 'a', text: 'Fine-tune a model on all your documents — this permanently teaches the model your company\'s information, so it always has the right answers without needing document lookup', points: 1 },
+        { id: 'b', text: 'RAG — index documents in a vector database and retrieve relevant sections at query time to include in context', points: 5 },
+        { id: 'c', text: 'Use a model with the largest available context window and upload all 500+ documents at once — modern models can handle millions of tokens effectively', points: 1 },
+        { id: 'd', text: 'Build a structured FAQ covering the most common questions and feed it as a knowledge base to a Custom GPT or Claude Project, updating the FAQ monthly', points: 2 },
+      ], `${m.code}-L6-003`),
     },
     {
-      id: `${m.code}-L6-005`, department: deptId, level: 6, weight: 1.0, difficulty: 'advanced',
-      questionText: 'When would you set an AI model\'s "temperature" to 0 versus a higher value like 0.8?',
+      id: `${m.code}-L6-004`, department: deptId, level: 6, weight: 1.2, difficulty: 'advanced',
+      questionText: `You're using AI for two ${dept} tasks: (1) extracting structured data from reports, and (2) brainstorming creative approaches to ${w1}. A colleague asks if they should use the same settings for both. What do you say?`,
       type: 'multiple_choice',
-      options: [
-        { id: 'a', text: 'Temperature 0 uses less compute and is faster; 0.8 activates more processing power for complex tasks. Use 0 for simple tasks and 0.8 for difficult analysis', points: 0 },
-        { id: 'b', text: 'Temperature 0 produces near-deterministic, consistent outputs (best for data extraction, classification, or factual Q&A); 0.8 introduces more randomness and creativity (best for brainstorming, content drafting)', points: 5 },
-        { id: 'c', text: 'Temperature 0 means the model won\'t use any training data and only relies on the provided context; 0.8 means it blends context with training data. Use 0 when context is sufficient', points: 0 },
-        { id: 'd', text: 'Temperature controls response length — 0 gives shorter responses and 0.8 gives longer, more detailed ones. Use lower values when you need concise output', points: 0 },
-      ],
+      options: shuffleOptions([
+        { id: 'a', text: 'Use the default settings for both — temperature differences are overstated in practice and don\'t meaningfully affect output quality for most professional tasks', points: 0 },
+        { id: 'b', text: 'Use low temperature for extraction (deterministic, precise) and higher temperature for brainstorming (varied, creative)', points: 5 },
+        { id: 'c', text: 'Use a more powerful model for brainstorming since creative tasks require more advanced reasoning capabilities, and a smaller efficient model for straightforward data extraction', points: 2 },
+        { id: 'd', text: 'The most important difference is the system prompt, not temperature — write a strict, detailed system prompt for extraction and a more open-ended one for brainstorming', points: 3 },
+      ], `${m.code}-L6-004`),
     },
     {
-      id: `${m.code}-L6-006`, department: deptId, level: 6, weight: 1.0, difficulty: 'advanced',
-      questionText: 'What are "system prompts" (or "custom instructions") and what is a Claude Project?',
+      id: `${m.code}-L6-005`, department: deptId, level: 6, weight: 1.2, difficulty: 'advanced',
+      questionText: `Your ${dept} team needs a persistent AI assistant that always understands your team's processes, terminology, and quality standards. What's the most practical approach?`,
       type: 'multiple_choice',
-      options: [
-        { id: 'a', text: 'System prompts are admin settings that control who can access the AI tool; Claude Projects are team workspaces for sharing chat history with colleagues', points: 0 },
-        { id: 'b', text: 'System prompts define the AI\'s persistent role, behavior, and constraints for every interaction; Claude Projects combine system prompts with uploaded knowledge files to create a customized AI assistant for a specific domain or workflow', points: 5 },
-        { id: 'c', text: 'System prompts are the initial training instructions used when building the AI model; Claude Projects are Anthropic\'s enterprise API offering for deploying custom models', points: 1 },
-        { id: 'd', text: 'System prompts are templates that auto-fill your first message in a chat; Claude Projects are pre-built prompt libraries organized by industry that Anthropic maintains', points: 1 },
-      ],
+      options: shuffleOptions([
+        { id: 'a', text: 'Fine-tune a custom model on your team\'s documents, Slack messages, and past deliverables — this permanently embeds your team\'s knowledge into the model\'s weights', points: 1 },
+        { id: 'b', text: 'Use a Claude Project or Custom GPT: system prompt with role/rules + uploaded knowledge docs', points: 5 },
+        { id: 'c', text: 'Rely on the AI\'s built-in memory and conversation history features — after enough interactions, it learns your team\'s preferences and context automatically over time', points: 1 },
+        { id: 'd', text: 'Create a master context document and paste it at the start of every new conversation — this ensures the AI always has full context without any special configuration', points: 2 },
+      ], `${m.code}-L6-005`),
+    },
+    {
+      id: `${m.code}-L6-006`, department: deptId, level: 6, weight: 1.2, difficulty: 'advanced',
+      questionText: `Your team is debating: should you use an off-the-shelf AI tool, build a custom integration using AI APIs, or fine-tune a model for a core ${dept} workflow? What determines the right choice?`,
+      type: 'multiple_choice',
+      options: shuffleOptions([
+        { id: 'a', text: 'Always start with off-the-shelf tools — they\'re cheaper, faster to deploy, supported by vendor teams, and good enough for 90% of business use cases across any department', points: 2 },
+        { id: 'b', text: 'It depends on how differentiated the workflow is: off-the-shelf for standard needs, API integration for custom workflows, fine-tuning only for highly specialized domain tasks', points: 5 },
+        { id: 'c', text: 'Custom API integrations are always the best investment — they give you full control over data flow, model selection, and prompt logic without vendor lock-in or feature limitations', points: 1 },
+        { id: 'd', text: 'Fine-tuning should be the default for any important business workflow — it permanently teaches the model your domain, reducing ongoing prompt engineering effort and improving consistency', points: 0 },
+      ], `${m.code}-L6-006`),
     },
   ];
 }

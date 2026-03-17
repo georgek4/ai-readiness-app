@@ -1,12 +1,12 @@
 import { northStarTargets, getTierForScore } from '../data/northStar';
 
 const LEVEL_WEIGHTS = {
-  1: 0.12, // AI Awareness
-  2: 0.20, // Current Usage
-  3: 0.20, // Skill Depth
-  4: 0.18, // Strategic Thinking
+  1: 0.10, // AI Awareness
+  2: 0.17, // Current Usage
+  3: 0.18, // Skill Depth
+  4: 0.15, // Strategic Thinking
   5: 0.12, // Future Readiness
-  6: 0.18, // Technical Fluency
+  6: 0.28, // Technical Fluency — weighted highest as core differentiator
 };
 
 const LEVEL_NAMES = {
