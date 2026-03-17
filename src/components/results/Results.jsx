@@ -6,7 +6,7 @@ import { getAssessment } from '../../db/database';
 import { getDepartmentById } from '../../data/departments';
 import { classifications } from '../../data/aiClassification';
 import { northStarTargets, getTierForScore } from '../../data/northStar';
-import { getRecommendations, getTopRecommendations } from '../../data/learningResources';
+import { getRecommendations, getTopRecommendations, toggleRecCompletion, getCompletedRecs } from '../../data/learningResources';
 import { exportResultsPDF } from '../../utils/pdfExport';
 
 const ROADMAP_STORAGE_KEY = 'ai_readiness_roadmap_progress';
@@ -31,6 +31,8 @@ export default function Results() {
   const [assessment, setAssessment] = useState(null);
   const [roadmapChecked, setRoadmapChecked] = useState({});
   const [expandedDimension, setExpandedDimension] = useState(null);
+  const [completedRecs, setCompletedRecs] = useState(new Set());
+  const [showCompleted, setShowCompleted] = useState({});
 
   useEffect(() => {
     const loadAssessment = async () => {
@@ -45,6 +47,7 @@ export default function Results() {
         if (data) {
           setAssessment(data);
           setRoadmapChecked(getRoadmapProgress(data.id));
+          setCompletedRecs(getCompletedRecs(data.id));
         }
       } catch (err) {
         console.error('[Results] Error loading assessment:', err);
@@ -65,6 +68,12 @@ export default function Results() {
       setRoadmapProgress(assessment.id, next);
       return next;
     });
+  }, [assessment]);
+
+  const handleToggleRec = useCallback((recKey) => {
+    if (!assessment) return;
+    const updated = toggleRecCompletion(assessment.id, recKey);
+    setCompletedRecs(new Set(updated));
   }, [assessment]);
 
   if (!assessment) {
@@ -107,8 +116,8 @@ export default function Results() {
     .sort((a, b) => a.val - b.val)
     .slice(0, 3);
 
-  // Get personalized recommendations for weak areas
-  const topRecs = getTopRecommendations(assessment.scores, 10);
+  // Get personalized recommendations for weak areas (excluding completed ones)
+  const topRecs = getTopRecommendations(assessment.scores, 10, assessment.id);
 
   // Count roadmap completion
   const allRoadmapItems = ['thirtyDays', 'sixtyDays', 'sixMonths'].flatMap(phase =>
@@ -209,12 +218,13 @@ export default function Results() {
         className="glass-card p-6"
       >
         <h3 className="text-lg font-semibold text-text-primary mb-2">📚 Recommended Next Steps</h3>
-        <p className="text-sm text-text-muted mb-5">Personalized actions, courses, and resources based on your scores. Click a dimension to see targeted recommendations.</p>
+        <p className="text-sm text-text-muted mb-1">Personalized courses, videos, podcasts, blogs, and actions based on your scores.</p>
+        <p className="text-sm text-text-muted mb-5">✅ Check off items you've completed to get fresh recommendations.</p>
 
         {/* Dimension cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-6">
           {Object.entries(assessment.scores).map(([key, score]) => {
-            const rec = getRecommendations(key, score);
+            const rec = getRecommendations(key, score, assessment.id);
             if (!rec) return null;
             const isExpanded = expandedDimension === key;
             const levelColors = { low: 'accent-red', medium: 'accent-amber', high: 'accent-green' };
@@ -235,7 +245,12 @@ export default function Results() {
                   <span className="text-sm font-semibold text-text-primary">{rec.label}</span>
                   <span className={`text-xs font-medium text-${color}`}>{score}%</span>
                 </div>
-                <span className={`text-xs text-${color}`}>{levelLabels[rec.level]}</span>
+                <div className="flex items-center justify-between">
+                  <span className={`text-xs text-${color}`}>{levelLabels[rec.level]}</span>
+                  {rec.completedCount > 0 && (
+                    <span className="text-xs text-accent-green">✅ {rec.completedCount}/{rec.totalCount}</span>
+                  )}
+                </div>
               </button>
             );
           })}
@@ -244,8 +259,54 @@ export default function Results() {
         {/* Expanded recommendations */}
         {expandedDimension && (() => {
           const score = assessment.scores[expandedDimension];
-          const rec = getRecommendations(expandedDimension, score);
+          const rec = getRecommendations(expandedDimension, score, assessment.id);
           if (!rec) return null;
+          const showingCompleted = showCompleted[expandedDimension];
+
+          const typeIcons = { course: '🎓', video: '🎬', podcast: '🎧', blog: '📝', reading: '📖', resource: '🔗', action: '⚡' };
+          const typeLabels = { course: 'Course', video: 'Video', podcast: 'Podcast', blog: 'Blog', reading: 'Reading', resource: 'Resource', action: 'Action' };
+          const typeColors = { course: 'bg-blue-500/15 text-blue-400', video: 'bg-red-500/15 text-red-400', podcast: 'bg-purple-500/15 text-purple-400', blog: 'bg-emerald-500/15 text-emerald-400', reading: 'bg-amber-500/15 text-amber-400', resource: 'bg-cyan-500/15 text-cyan-400', action: 'bg-orange-500/15 text-orange-400' };
+
+          const renderRecItem = (action, isCompleted = false) => (
+            <li key={action.recKey} className={`flex items-start gap-3 p-2.5 rounded-lg transition-all ${
+              isCompleted ? 'bg-accent-green/5 opacity-70' : 'hover:bg-bg-card'
+            }`}>
+              <input
+                type="checkbox"
+                checked={isCompleted}
+                onChange={() => handleToggleRec(action.recKey)}
+                className="mt-1 w-4 h-4 rounded border-border text-accent-green focus:ring-accent-green cursor-pointer flex-shrink-0"
+              />
+              <span className="text-lg mt-0.5 flex-shrink-0">{typeIcons[action.type] || '📌'}</span>
+              <div className="flex-1 min-w-0">
+                <div className={`flex flex-wrap items-center gap-2 ${isCompleted ? 'line-through' : ''}`}>
+                  {action.url ? (
+                    <a href={action.url} target="_blank" rel="noopener noreferrer"
+                      className={`text-sm ${isCompleted ? 'text-text-muted' : 'text-accent-blue hover:underline'}`}>
+                      {action.text}
+                    </a>
+                  ) : (
+                    <span className={`text-sm ${isCompleted ? 'text-text-muted' : 'text-text-secondary'}`}>{action.text}</span>
+                  )}
+                </div>
+                <div className="flex flex-wrap gap-1.5 mt-1">
+                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${typeColors[action.type] || 'bg-gray-500/15 text-gray-400'}`}>
+                    {typeLabels[action.type] || action.type}
+                  </span>
+                  {action.duration && (
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-text-muted/10 text-text-muted">
+                      ⏱ {action.duration}
+                    </span>
+                  )}
+                  {action.url && (
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-accent-blue/10 text-accent-blue">
+                      🔗 Link
+                    </span>
+                  )}
+                </div>
+              </div>
+            </li>
+          );
 
           return (
             <motion.div
@@ -253,30 +314,57 @@ export default function Results() {
               animate={{ opacity: 1, height: 'auto' }}
               className="rounded-xl border border-border bg-bg-dark p-5"
             >
-              <h4 className="font-semibold text-text-primary mb-2">{rec.label} — {score < 40 ? 'Getting Started' : score < 70 ? 'Level Up' : 'Lead & Scale'}</h4>
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="font-semibold text-text-primary">{rec.label} — {score < 40 ? 'Getting Started' : score < 70 ? 'Level Up' : 'Lead & Scale'}</h4>
+                {rec.completedCount > 0 && (
+                  <span className="text-sm text-accent-green font-medium">✅ {rec.completedCount} completed</span>
+                )}
+              </div>
               <p className="text-sm text-text-secondary mb-4">{rec.summary}</p>
-              <ul className="space-y-3">
-                {rec.actions.map((action, i) => {
-                  const typeIcons = { course: '🎓', reading: '📖', resource: '🔗', action: '⚡' };
-                  const typeLabels = { course: 'Course', reading: 'Reading', resource: 'Resource', action: 'Action' };
-                  return (
-                    <li key={i} className="flex items-start gap-3">
-                      <span className="text-lg mt-0.5">{typeIcons[action.type] || '📌'}</span>
-                      <div className="flex-1">
-                        {action.url ? (
-                          <a href={action.url} target="_blank" rel="noopener noreferrer"
-                            className="text-sm text-accent-blue hover:underline">
-                            {action.text}
-                          </a>
-                        ) : (
-                          <span className="text-sm text-text-secondary">{action.text}</span>
-                        )}
-                        <span className="ml-2 text-xs text-text-muted">({typeLabels[action.type]})</span>
-                      </div>
-                    </li>
-                  );
-                })}
+
+              {/* Progress bar for this dimension */}
+              {rec.totalCount > 0 && (
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="flex-1 bg-bg-card rounded-full h-2">
+                    <div
+                      className="bg-accent-green h-2 rounded-full transition-all duration-500"
+                      style={{ width: `${(rec.completedCount / rec.totalCount) * 100}%` }}
+                    />
+                  </div>
+                  <span className="text-xs text-text-muted whitespace-nowrap">{rec.completedCount}/{rec.totalCount}</span>
+                </div>
+              )}
+
+              {/* Uncompleted recommendations */}
+              <ul className="space-y-2">
+                {rec.actions.map(action => renderRecItem(action, false))}
               </ul>
+
+              {/* All done message */}
+              {rec.actions.length === 0 && rec.completedCount > 0 && (
+                <div className="text-center py-6">
+                  <div className="text-3xl mb-2">🎉</div>
+                  <p className="text-sm text-accent-green font-medium">You've completed all recommendations for this dimension!</p>
+                  <p className="text-xs text-text-muted mt-1">Amazing progress. Consider retaking the assessment to unlock new recommendations.</p>
+                </div>
+              )}
+
+              {/* Completed items (collapsible) */}
+              {rec.completedActions.length > 0 && (
+                <div className="mt-4 pt-4 border-t border-border">
+                  <button
+                    onClick={() => setShowCompleted(prev => ({ ...prev, [expandedDimension]: !prev[expandedDimension] }))}
+                    className="text-sm text-text-muted hover:text-text-secondary transition-colors"
+                  >
+                    {showingCompleted ? '▼' : '▶'} {rec.completedActions.length} completed item{rec.completedActions.length !== 1 ? 's' : ''}
+                  </button>
+                  {showingCompleted && (
+                    <ul className="space-y-2 mt-2">
+                      {rec.completedActions.map(action => renderRecItem(action, true))}
+                    </ul>
+                  )}
+                </div>
+              )}
             </motion.div>
           );
         })()}
@@ -284,28 +372,58 @@ export default function Results() {
         {/* Quick wins — top priority items across all dimensions */}
         {!expandedDimension && (
           <div className="rounded-xl border border-primary/20 bg-primary/5 p-5">
-            <h4 className="font-semibold text-primary mb-3">⚡ Quick Wins — Start Here</h4>
+            <h4 className="font-semibold text-primary mb-1">⚡ Quick Wins — Start Here</h4>
+            <p className="text-xs text-text-muted mb-3">Top priority actions from your weakest areas. Check items off as you complete them.</p>
             <ul className="space-y-2">
-              {topRecs.slice(0, 5).map((rec, i) => {
-                const typeIcons = { course: '🎓', reading: '📖', resource: '🔗', action: '⚡' };
+              {topRecs.slice(0, 6).map((rec) => {
+                const typeIcons = { course: '🎓', video: '🎬', podcast: '🎧', blog: '📝', reading: '📖', resource: '🔗', action: '⚡' };
+                const typeLabels = { course: 'Course', video: 'Video', podcast: 'Podcast', blog: 'Blog', reading: 'Reading', resource: 'Resource', action: 'Action' };
+                const typeColors = { course: 'bg-blue-500/15 text-blue-400', video: 'bg-red-500/15 text-red-400', podcast: 'bg-purple-500/15 text-purple-400', blog: 'bg-emerald-500/15 text-emerald-400', reading: 'bg-amber-500/15 text-amber-400', resource: 'bg-cyan-500/15 text-cyan-400', action: 'bg-orange-500/15 text-orange-400' };
+                const isCompleted = completedRecs.has(rec.recKey);
                 return (
-                  <li key={i} className="flex items-start gap-3">
-                    <span className="text-base mt-0.5">{typeIcons[rec.type] || '📌'}</span>
-                    <div className="flex-1">
-                      {rec.url ? (
-                        <a href={rec.url} target="_blank" rel="noopener noreferrer"
-                          className="text-sm text-accent-blue hover:underline">
-                          {rec.text}
-                        </a>
-                      ) : (
-                        <span className="text-sm text-text-secondary">{rec.text}</span>
-                      )}
-                      <span className="ml-2 text-xs text-text-muted">{rec.dimension}</span>
+                  <li key={rec.recKey} className={`flex items-start gap-3 p-2 rounded-lg transition-all ${
+                    isCompleted ? 'opacity-50' : 'hover:bg-primary/5'
+                  }`}>
+                    <input
+                      type="checkbox"
+                      checked={isCompleted}
+                      onChange={() => handleToggleRec(rec.recKey)}
+                      className="mt-1 w-4 h-4 rounded border-border text-accent-green focus:ring-accent-green cursor-pointer flex-shrink-0"
+                    />
+                    <span className="text-base mt-0.5 flex-shrink-0">{typeIcons[rec.type] || '📌'}</span>
+                    <div className="flex-1 min-w-0">
+                      <div className={isCompleted ? 'line-through' : ''}>
+                        {rec.url ? (
+                          <a href={rec.url} target="_blank" rel="noopener noreferrer"
+                            className={`text-sm ${isCompleted ? 'text-text-muted' : 'text-accent-blue hover:underline'}`}>
+                            {rec.text}
+                          </a>
+                        ) : (
+                          <span className={`text-sm ${isCompleted ? 'text-text-muted' : 'text-text-secondary'}`}>{rec.text}</span>
+                        )}
+                      </div>
+                      <div className="flex flex-wrap gap-1.5 mt-1">
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${typeColors[rec.type] || 'bg-gray-500/15 text-gray-400'}`}>
+                          {typeLabels[rec.type] || rec.type}
+                        </span>
+                        {rec.duration && (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-text-muted/10 text-text-muted">
+                            ⏱ {rec.duration}
+                          </span>
+                        )}
+                        <span className="text-xs text-text-muted">{rec.dimension}</span>
+                      </div>
                     </div>
                   </li>
                 );
               })}
             </ul>
+            {topRecs.length === 0 && (
+              <div className="text-center py-4">
+                <div className="text-2xl mb-2">🏆</div>
+                <p className="text-sm text-accent-green font-medium">You've completed all quick wins! Click a dimension above for more.</p>
+              </div>
+            )}
           </div>
         )}
       </motion.div>
