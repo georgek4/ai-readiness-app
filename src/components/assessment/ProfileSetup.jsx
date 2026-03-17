@@ -43,6 +43,28 @@ export default function ProfileSetup() {
         <p className="text-text-secondary">Tell us about yourself to begin your AI readiness assessment</p>
       </motion.div>
 
+      {/* Privacy & Anonymization Notice */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        className="glass-card p-5 mb-6 border border-accent-blue/30 bg-accent-blue/5"
+      >
+        <div className="flex items-start gap-3">
+          <span className="text-xl mt-0.5">🔒</span>
+          <div>
+            <h3 className="text-sm font-semibold text-text-primary mb-1">Your Privacy is Protected</h3>
+            <ul className="text-xs text-text-secondary space-y-1">
+              <li>• Your responses are <span className="text-text-primary font-medium">fully anonymized</span> in all dashboards and reports</li>
+              <li>• Individual answers are <span className="text-text-primary font-medium">never shared</span> with managers or leadership</li>
+              <li>• Only aggregate department-level data is visible in organizational views</li>
+              <li>• This assessment is designed to help <span className="text-text-primary font-medium">you</span> identify growth areas — not to evaluate your job performance</li>
+            </ul>
+            <p className="text-xs text-text-muted mt-2">Answer honestly for the most useful and accurate results.</p>
+          </div>
+        </div>
+      </motion.div>
+
       <motion.form
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}

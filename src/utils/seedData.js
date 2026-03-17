@@ -58,7 +58,7 @@ const DEPT_PROFILES = {
   },
   demo_engineering: {
     means: [78, 75, 68, 62, 65, 62], variance: 11,
-    roles: ['Demo Engineering Manager', 'Senior Demo Engineer', 'Demo Engineer', 'Demo Automation Specialist'],
+    roles: ['Demo Engineering Manager', 'Senior Demo Engineer', 'Demo Engineer', 'Demo Automation Specialist', 'Solution Designer', 'Solution Strategist'],
     count: 3,
   },
   industry_strategy: {

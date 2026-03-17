@@ -257,12 +257,13 @@ export const departments = [
   },
   {
     id: 'demo_engineering',
-    name: 'Demo Engineering',
+    name: 'Demo & Solution Engineering',
     icon: '🖥️',
-    mission: 'Build and maintain demonstration environments, proof-of-concept platforms, and interactive showcases that bring the product to life for prospects and partners.',
+    mission: 'Build and maintain demonstration environments, design customer solutions, create proof-of-concept platforms, and deliver interactive showcases that bring the product to life for prospects and partners.',
     roles: [
       'Director of Demo Engineering', 'Demo Engineer', 'Demo Developer',
-      'Demo Solutions Architect', 'Demo Environment Manager', 'Demo Data Specialist'
+      'Demo Solutions Architect', 'Demo Environment Manager', 'Demo Data Specialist',
+      'Solution Designer', 'Solution Strategist'
     ],
     activities: [
       { id: 'demo_architecture', name: 'Demo environment architecture', description: 'Designing the technical foundation for demo instances', classification: 'humanize', rationale: 'Requires creative technical design to showcase value' },
@@ -276,8 +277,11 @@ export const departments = [
       { id: 'demo_storytelling', name: 'Demo storytelling & narrative design', description: 'Crafting compelling demo narratives that resonate', classification: 'humanize', rationale: 'Requires storytelling ability and buyer empathy' },
       { id: 'demo_video', name: 'Video demo production', description: 'Recording high-quality product demo videos', classification: 'agentify', rationale: 'AI assists with editing; human presents' },
       { id: 'demo_poc', name: 'POC environment provisioning', description: 'Spinning up isolated evaluation environments', classification: 'agentify', rationale: 'AI provisions; human customizes' },
+      { id: 'demo_solution_design', name: 'Solution design & architecture', description: 'Designing end-to-end solutions tailored to customer business requirements', classification: 'humanize', rationale: 'Requires deep understanding of customer context, creative problem-solving, and technical expertise' },
+      { id: 'demo_solution_validation', name: 'Solution validation & testing', description: 'Validating proposed solutions against customer requirements and constraints', classification: 'agentify', rationale: 'AI runs validation checks; human interprets results and adjusts design' },
+      { id: 'demo_blueprint', name: 'Solution blueprint documentation', description: 'Creating detailed solution architecture documents and implementation guides', classification: 'agentify', rationale: 'AI drafts blueprints from templates; human customizes for specific customer context' },
     ],
-    metrics: ['Demo-to-Meeting Conversion', 'Self-Serve Demo Completion Rate', 'Demo Environment Uptime', 'Custom Demo Build Time', 'Demo Engagement Score'],
+    metrics: ['Demo-to-Meeting Conversion', 'Self-Serve Demo Completion Rate', 'Demo Environment Uptime', 'Custom Demo Build Time', 'Demo Engagement Score', 'Solution Design Quality Score', 'Solution Win Rate'],
   },
   {
     id: 'industry_strategy',

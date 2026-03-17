@@ -1,39 +1,53 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Cell } from 'recharts';
+import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, ResponsiveContainer } from 'recharts';
 import { getAssessment } from '../../db/database';
 import { getDepartmentById } from '../../data/departments';
 import { classifications } from '../../data/aiClassification';
 import { northStarTargets, getTierForScore } from '../../data/northStar';
+import { getRecommendations, getTopRecommendations } from '../../data/learningResources';
 import { exportResultsPDF } from '../../utils/pdfExport';
+
+const ROADMAP_STORAGE_KEY = 'ai_readiness_roadmap_progress';
+
+function getRoadmapProgress(assessmentId) {
+  try {
+    const all = JSON.parse(localStorage.getItem(ROADMAP_STORAGE_KEY) || '{}');
+    return all[assessmentId] || {};
+  } catch { return {}; }
+}
+
+function setRoadmapProgress(assessmentId, progress) {
+  try {
+    const all = JSON.parse(localStorage.getItem(ROADMAP_STORAGE_KEY) || '{}');
+    all[assessmentId] = progress;
+    localStorage.setItem(ROADMAP_STORAGE_KEY, JSON.stringify(all));
+  } catch { /* ignore */ }
+}
 
 export default function Results() {
   const { id } = useParams();
   const [assessment, setAssessment] = useState(null);
+  const [roadmapChecked, setRoadmapChecked] = useState({});
+  const [expandedDimension, setExpandedDimension] = useState(null);
 
   useEffect(() => {
     const loadAssessment = async () => {
       try {
-        // Try loading from database (works for both IndexedDB and localStorage fallback)
         let data = await getAssessment(Number(id));
         if (!data) {
-          // Check emergency sessionStorage fallback
           const emergency = sessionStorage.getItem('emergencyAssessment');
           if (emergency) {
             data = JSON.parse(emergency);
-            console.log('[Results] Loaded from emergency fallback');
           }
         }
         if (data) {
-          console.log('[Results] Assessment loaded:', data.id, data.overallScore);
           setAssessment(data);
-        } else {
-          console.error('[Results] Assessment not found for id:', id);
+          setRoadmapChecked(getRoadmapProgress(data.id));
         }
       } catch (err) {
         console.error('[Results] Error loading assessment:', err);
-        // Try emergency fallback
         const emergency = sessionStorage.getItem('emergencyAssessment');
         if (emergency) {
           setAssessment(JSON.parse(emergency));
@@ -42,6 +56,16 @@ export default function Results() {
     };
     loadAssessment();
   }, [id]);
+
+  const toggleRoadmapItem = useCallback((phaseKey, index) => {
+    if (!assessment) return;
+    const itemKey = `${phaseKey}_${index}`;
+    setRoadmapChecked(prev => {
+      const next = { ...prev, [itemKey]: !prev[itemKey] };
+      setRoadmapProgress(assessment.id, next);
+      return next;
+    });
+  }, [assessment]);
 
   if (!assessment) {
     return (
@@ -65,12 +89,6 @@ export default function Results() {
     { subject: 'Technical Fluency', score: assessment.scores.technicalFluency, fullMark: 100 },
   ];
 
-  const gapData = assessment.gapAnalysis ? [{
-    name: department?.name,
-    current: assessment.gapAnalysis.currentMaturity,
-    target: assessment.gapAnalysis.targetMaturity,
-  }] : [];
-
   // Group activities by classification
   const activities = department?.activities || [];
   const grouped = {
@@ -88,6 +106,16 @@ export default function Results() {
     .map(([key, val]) => ({ key, val, label: labelMap[key] }))
     .sort((a, b) => a.val - b.val)
     .slice(0, 3);
+
+  // Get personalized recommendations for weak areas
+  const topRecs = getTopRecommendations(assessment.scores, 10);
+
+  // Count roadmap completion
+  const allRoadmapItems = ['thirtyDays', 'sixtyDays', 'sixMonths'].flatMap(phase =>
+    (assessment.roadmap?.[phase] || []).map((_, i) => `${phase}_${i}`)
+  );
+  const completedCount = allRoadmapItems.filter(key => roadmapChecked[key]).length;
+  const totalRoadmapItems = allRoadmapItems.length;
 
   return (
     <div className="max-w-5xl mx-auto space-y-8">
@@ -154,7 +182,7 @@ export default function Results() {
         >
           <div className="glass-card p-6">
             <h3 className="text-lg font-semibold text-accent-green mb-3">💪 Top Strengths</h3>
-            {strengths.map((s, i) => (
+            {strengths.map((s) => (
               <div key={s.key} className="flex items-center justify-between py-2 border-b border-border last:border-0">
                 <span className="text-text-secondary">{s.label}</span>
                 <span className="font-bold text-accent-green">{s.val}%</span>
@@ -163,7 +191,7 @@ export default function Results() {
           </div>
           <div className="glass-card p-6">
             <h3 className="text-lg font-semibold text-accent-red mb-3">🎯 Areas to Improve</h3>
-            {weaknesses.map((w, i) => (
+            {weaknesses.map((w) => (
               <div key={w.key} className="flex items-center justify-between py-2 border-b border-border last:border-0">
                 <span className="text-text-secondary">{w.label}</span>
                 <span className="font-bold text-accent-red">{w.val}%</span>
@@ -172,6 +200,115 @@ export default function Results() {
           </div>
         </motion.div>
       </div>
+
+      {/* NEW: Personalized Recommendations */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.45 }}
+        className="glass-card p-6"
+      >
+        <h3 className="text-lg font-semibold text-text-primary mb-2">📚 Recommended Next Steps</h3>
+        <p className="text-sm text-text-muted mb-5">Personalized actions, courses, and resources based on your scores. Click a dimension to see targeted recommendations.</p>
+
+        {/* Dimension cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-6">
+          {Object.entries(assessment.scores).map(([key, score]) => {
+            const rec = getRecommendations(key, score);
+            if (!rec) return null;
+            const isExpanded = expandedDimension === key;
+            const levelColors = { low: 'accent-red', medium: 'accent-amber', high: 'accent-green' };
+            const levelLabels = { low: 'Needs Focus', medium: 'Building', high: 'Strong' };
+            const color = levelColors[rec.level];
+
+            return (
+              <button
+                key={key}
+                onClick={() => setExpandedDimension(isExpanded ? null : key)}
+                className={`text-left p-4 rounded-xl border transition-all ${
+                  isExpanded
+                    ? `border-${color} bg-${color}/10`
+                    : 'border-border bg-bg-dark hover:border-text-muted'
+                }`}
+              >
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-sm font-semibold text-text-primary">{rec.label}</span>
+                  <span className={`text-xs font-medium text-${color}`}>{score}%</span>
+                </div>
+                <span className={`text-xs text-${color}`}>{levelLabels[rec.level]}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Expanded recommendations */}
+        {expandedDimension && (() => {
+          const score = assessment.scores[expandedDimension];
+          const rec = getRecommendations(expandedDimension, score);
+          if (!rec) return null;
+
+          return (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              className="rounded-xl border border-border bg-bg-dark p-5"
+            >
+              <h4 className="font-semibold text-text-primary mb-2">{rec.label} — {score < 40 ? 'Getting Started' : score < 70 ? 'Level Up' : 'Lead & Scale'}</h4>
+              <p className="text-sm text-text-secondary mb-4">{rec.summary}</p>
+              <ul className="space-y-3">
+                {rec.actions.map((action, i) => {
+                  const typeIcons = { course: '🎓', reading: '📖', resource: '🔗', action: '⚡' };
+                  const typeLabels = { course: 'Course', reading: 'Reading', resource: 'Resource', action: 'Action' };
+                  return (
+                    <li key={i} className="flex items-start gap-3">
+                      <span className="text-lg mt-0.5">{typeIcons[action.type] || '📌'}</span>
+                      <div className="flex-1">
+                        {action.url ? (
+                          <a href={action.url} target="_blank" rel="noopener noreferrer"
+                            className="text-sm text-accent-blue hover:underline">
+                            {action.text}
+                          </a>
+                        ) : (
+                          <span className="text-sm text-text-secondary">{action.text}</span>
+                        )}
+                        <span className="ml-2 text-xs text-text-muted">({typeLabels[action.type]})</span>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            </motion.div>
+          );
+        })()}
+
+        {/* Quick wins — top priority items across all dimensions */}
+        {!expandedDimension && (
+          <div className="rounded-xl border border-primary/20 bg-primary/5 p-5">
+            <h4 className="font-semibold text-primary mb-3">⚡ Quick Wins — Start Here</h4>
+            <ul className="space-y-2">
+              {topRecs.slice(0, 5).map((rec, i) => {
+                const typeIcons = { course: '🎓', reading: '📖', resource: '🔗', action: '⚡' };
+                return (
+                  <li key={i} className="flex items-start gap-3">
+                    <span className="text-base mt-0.5">{typeIcons[rec.type] || '📌'}</span>
+                    <div className="flex-1">
+                      {rec.url ? (
+                        <a href={rec.url} target="_blank" rel="noopener noreferrer"
+                          className="text-sm text-accent-blue hover:underline">
+                          {rec.text}
+                        </a>
+                      ) : (
+                        <span className="text-sm text-text-secondary">{rec.text}</span>
+                      )}
+                      <span className="ml-2 text-xs text-text-muted">{rec.dimension}</span>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        )}
+      </motion.div>
 
       {/* North Star Gap */}
       {assessment.gapAnalysis && (
@@ -205,23 +342,32 @@ export default function Results() {
         </motion.div>
       )}
 
-      {/* Activity Classification Map */}
+      {/* Activity Classification Map — with clarifying subtitle and descriptions */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.6 }}
         className="glass-card p-6"
       >
-        <h3 className="text-lg font-semibold text-text-primary mb-4">Activity Classification Map</h3>
+        <h3 className="text-lg font-semibold text-text-primary mb-1">Activity Classification Map</h3>
+        <p className="text-sm text-text-muted mb-4">
+          This shows how your department's activities <span className="text-text-secondary font-medium">should ideally be classified</span> in an AI-enabled future — not your current state. Use this as a target to work toward.
+        </p>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {Object.entries(grouped).map(([key, items]) => {
             const cls = classifications[key];
             return (
               <div key={key} className="rounded-xl p-4 border" style={{ borderColor: cls.color, backgroundColor: cls.bgColor }}>
-                <h4 className="font-semibold mb-2" style={{ color: cls.color }}>{cls.name} ({items.length})</h4>
-                <ul className="space-y-1">
+                <h4 className="font-semibold mb-1" style={{ color: cls.color }}>{cls.name} ({items.length})</h4>
+                <p className="text-xs text-text-muted mb-3">{cls.description}</p>
+                <ul className="space-y-2">
                   {items.map(a => (
-                    <li key={a.id} className="text-sm text-text-secondary">{a.name}</li>
+                    <li key={a.id} className="text-sm">
+                      <span className="text-text-secondary">{a.name}</span>
+                      {a.rationale && (
+                        <span className="block text-xs text-text-muted mt-0.5">{a.rationale}</span>
+                      )}
+                    </li>
                   ))}
                 </ul>
               </div>
@@ -230,7 +376,7 @@ export default function Results() {
         </div>
       </motion.div>
 
-      {/* Roadmap */}
+      {/* Interactive Roadmap */}
       {assessment.roadmap && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -238,7 +384,23 @@ export default function Results() {
           transition={{ delay: 0.7 }}
           className="glass-card p-6"
         >
-          <h3 className="text-lg font-semibold text-text-primary mb-6">🗺️ Your AI Readiness Roadmap</h3>
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-lg font-semibold text-text-primary">🗺️ Your AI Readiness Roadmap</h3>
+            {totalRoadmapItems > 0 && (
+              <span className="text-sm font-medium text-text-muted">
+                {completedCount}/{totalRoadmapItems} completed
+              </span>
+            )}
+          </div>
+          {totalRoadmapItems > 0 && (
+            <div className="w-full bg-bg-dark rounded-full h-2 mb-6">
+              <div
+                className="bg-accent-green h-2 rounded-full transition-all duration-500"
+                style={{ width: `${(completedCount / totalRoadmapItems) * 100}%` }}
+              />
+            </div>
+          )}
+          <p className="text-sm text-text-muted mb-5">Check off items as you complete them. Already done something? Check it off and focus on the remaining items.</p>
           <div className="space-y-6">
             {[
               { key: 'thirtyDays', label: 'Next 30 Days', icon: '🏃', color: 'accent-green' },
@@ -253,12 +415,31 @@ export default function Results() {
                     {phase.icon} {phase.label}
                   </h4>
                   <ul className="space-y-2">
-                    {items.map((item, i) => (
-                      <li key={i} className="flex items-start gap-2 text-text-secondary">
-                        <span className="text-text-muted mt-1">•</span>
-                        {item}
-                      </li>
-                    ))}
+                    {items.map((item, i) => {
+                      const itemKey = `${phase.key}_${i}`;
+                      const isChecked = roadmapChecked[itemKey];
+                      return (
+                        <li key={i}>
+                          <label className={`flex items-start gap-3 cursor-pointer group p-2 rounded-lg transition-all ${
+                            isChecked ? 'bg-accent-green/5' : 'hover:bg-bg-dark'
+                          }`}>
+                            <input
+                              type="checkbox"
+                              checked={!!isChecked}
+                              onChange={() => toggleRoadmapItem(phase.key, i)}
+                              className="mt-1 w-4 h-4 rounded border-border text-accent-green focus:ring-accent-green cursor-pointer"
+                            />
+                            <span className={`text-sm transition-all ${
+                              isChecked
+                                ? 'line-through text-text-muted'
+                                : 'text-text-secondary group-hover:text-text-primary'
+                            }`}>
+                              {item}
+                            </span>
+                          </label>
+                        </li>
+                      );
+                    })}
                   </ul>
                 </div>
               );
