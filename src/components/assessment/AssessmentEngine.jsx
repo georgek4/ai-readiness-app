@@ -116,9 +116,9 @@ export default function AssessmentEngine() {
       };
 
       console.log('[Assessment] Saving assessment data:', { overallScore, tier: tier.name, department: profile.department });
-      const { id } = await saveAssessment(assessmentData);
-      console.log('[Assessment] Assessment saved with id:', id);
-      await saveResponses(id, responses);
+      const { id, cloudId } = await saveAssessment(assessmentData);
+      console.log('[Assessment] Assessment saved with id:', id, 'cloudId:', cloudId);
+      await saveResponses(id, responses, cloudId);
       console.log('[Assessment] Responses saved:', responses.length);
       navigate(`/results/${id}`);
     } catch (err) {

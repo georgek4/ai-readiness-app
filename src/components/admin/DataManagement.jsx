@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { getAllAssessments, exportData, importData, clearAllData, deleteAssessment } from '../../db/database';
+import { getAllAssessments, exportData, importData, clearAllData, deleteAssessment, getStorageDiagnostics } from '../../db/database';
+import { getSupabaseConfig, cloudTestConnection } from '../../db/supabase';
 import { departments } from '../../data/departments';
 import { seedSampleData } from '../../utils/seedData';
 
@@ -10,8 +11,32 @@ export default function DataManagement() {
   const [showConfirmClear, setShowConfirmClear] = useState(false);
   const [seedStatus, setSeedStatus] = useState('');
   const [seeding, setSeeding] = useState(false);
+  const [diagnostics, setDiagnostics] = useState(null);
+  const [cloudStatus, setCloudStatus] = useState(null);
 
-  const load = () => getAllAssessments({ includeCloud: true }).then(setAssessments);
+  const load = async () => {
+    const data = await getAllAssessments({ includeCloud: true });
+    setAssessments(data);
+    // Also load diagnostics
+    try {
+      const diag = await getStorageDiagnostics();
+      setDiagnostics(diag);
+    } catch (err) {
+      console.warn('[DataMgmt] Diagnostics failed:', err);
+    }
+    // Check cloud connection
+    const config = getSupabaseConfig();
+    if (config) {
+      try {
+        const result = await cloudTestConnection();
+        setCloudStatus(result);
+      } catch {
+        setCloudStatus({ ok: false, error: 'Connection test failed' });
+      }
+    } else {
+      setCloudStatus({ ok: false, error: 'No Supabase configuration' });
+    }
+  };
 
   useEffect(() => { load(); }, []);
 
@@ -153,13 +178,49 @@ export default function DataManagement() {
       <div className="glass-card p-4 flex items-center gap-3">
         <span className="text-xl">☁️</span>
         <div>
-          <div className="text-sm font-medium text-text-primary">Cloud Storage Active</div>
-          <div className="text-xs text-text-muted">All assessments are automatically synced to the central database</div>
+          <div className="text-sm font-medium text-text-primary">
+            {cloudStatus?.ok ? 'Cloud Database Connected' : cloudStatus ? 'Cloud Database Disconnected' : 'Checking cloud connection...'}
+          </div>
+          <div className="text-xs text-text-muted">
+            {cloudStatus?.ok
+              ? 'All assessments are automatically synced to the central database across all users.'
+              : cloudStatus?.error || 'Testing connection...'
+            }
+          </div>
         </div>
         <div className="ml-auto">
-          <span className="inline-block w-2.5 h-2.5 rounded-full bg-accent-green animate-pulse" />
+          <span className={`inline-block w-2.5 h-2.5 rounded-full ${cloudStatus?.ok ? 'bg-accent-green animate-pulse' : cloudStatus ? 'bg-accent-red' : 'bg-accent-amber animate-pulse'}`} />
         </div>
       </div>
+
+      {/* Storage Diagnostics */}
+      {diagnostics && (
+        <div className="glass-card p-6">
+          <h3 className="text-lg font-semibold text-text-primary mb-4">Storage Diagnostics</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="p-4 rounded-xl bg-bg-dark border border-border">
+              <div className="text-sm text-text-muted mb-1">localStorage</div>
+              <div className="text-2xl font-bold text-text-primary">{diagnostics.localStorage}</div>
+              <div className="text-xs text-accent-green">Primary source</div>
+            </div>
+            <div className="p-4 rounded-xl bg-bg-dark border border-border">
+              <div className="text-sm text-text-muted mb-1">IndexedDB</div>
+              <div className="text-2xl font-bold text-text-primary">{diagnostics.indexedDB ?? 'N/A'}</div>
+              <div className="text-xs text-text-muted">Legacy secondary</div>
+            </div>
+            <div className="p-4 rounded-xl bg-bg-dark border border-border">
+              <div className="text-sm text-text-muted mb-1">Merged Total</div>
+              <div className="text-2xl font-bold text-primary">{diagnostics.merged}</div>
+              <div className="text-xs text-text-muted">After deduplication</div>
+            </div>
+          </div>
+          {diagnostics.indexedDBOnly > 0 && (
+            <div className="mt-3 p-3 rounded-xl bg-accent-amber/10 text-accent-amber text-sm">
+              Found {diagnostics.indexedDBOnly} assessment(s) only in IndexedDB — these have been migrated to localStorage.
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Assessment List */}
       <div className="glass-card p-6">

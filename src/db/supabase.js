@@ -1,15 +1,29 @@
 import { createClient } from '@supabase/supabase-js';
 
 // ── Supabase Configuration ──
-// Users configure these via the Data Management page.
-// Stored in localStorage so they persist across sessions.
+// Priority: 1) Environment variables (build-time), 2) localStorage (runtime config)
+// Environment variables are set via .env or GitHub Actions secrets.
+// localStorage config is set via the Data Management page as a fallback.
 
 const CONFIG_KEY = 'supabase_config';
 
+// Build-time env vars (Vite exposes these via import.meta.env)
+const ENV_URL = import.meta.env.VITE_SUPABASE_URL || '';
+const ENV_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+
 export function getSupabaseConfig() {
+  // Environment variables take priority (always available, no user setup needed)
+  if (ENV_URL && ENV_KEY) {
+    return { url: ENV_URL, anonKey: ENV_KEY };
+  }
+  // Fallback to localStorage-based config (manual setup via Data Management)
   try {
     return JSON.parse(localStorage.getItem(CONFIG_KEY) || 'null');
   } catch { return null; }
+}
+
+export function isEnvConfigured() {
+  return !!(ENV_URL && ENV_KEY);
 }
 
 export function setSupabaseConfig(url, anonKey) {

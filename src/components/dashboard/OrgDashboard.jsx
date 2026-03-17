@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect, useCallback } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell,
@@ -13,20 +13,54 @@ import { exportDashboardPDF } from '../../utils/pdfExport';
 
 export default function OrgDashboard() {
   const [assessments, setAssessments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [lastRefresh, setLastRefresh] = useState(null);
+  const location = useLocation();
 
-  useEffect(() => {
-    getAllAssessments({ includeCloud: true }).then(setAssessments);
+  const loadData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const data = await getAllAssessments({ includeCloud: true });
+      setAssessments(data);
+      setLastRefresh(new Date());
+      console.log(`[Dashboard] Loaded ${data.length} assessments from all sources`);
+    } catch (err) {
+      console.error('[Dashboard] Failed to load assessments:', err);
+    }
+    setLoading(false);
   }, []);
 
-  if (assessments.length === 0) {
+  // Re-fetch data every time the dashboard is navigated to (not just on mount)
+  useEffect(() => {
+    loadData();
+  }, [loadData, location.key]);
+
+  if (!loading && assessments.length === 0) {
     return (
       <div className="text-center py-20">
         <div className="text-6xl mb-6">📊</div>
         <h1 className="text-2xl font-bold text-text-primary mb-3">No Assessments Yet</h1>
         <p className="text-text-secondary mb-6">Complete at least one assessment to see organizational data.</p>
-        <Link to="/setup" className="px-6 py-3 rounded-xl bg-primary text-white no-underline font-medium">
-          🚀 Start Assessment
-        </Link>
+        <div className="flex items-center justify-center gap-4">
+          <Link to="/setup" className="px-6 py-3 rounded-xl bg-primary text-white no-underline font-medium">
+            🚀 Start Assessment
+          </Link>
+          <button
+            onClick={loadData}
+            className="px-6 py-3 rounded-xl bg-bg-card border border-border text-text-primary font-medium hover:bg-bg-card-hover transition-all"
+          >
+            🔄 Refresh Data
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (loading && assessments.length === 0) {
+    return (
+      <div className="text-center py-20">
+        <div className="text-4xl mb-4 animate-pulse">📊</div>
+        <p className="text-text-secondary">Loading assessments from all sources...</p>
       </div>
     );
   }
@@ -88,8 +122,22 @@ export default function OrgDashboard() {
 
   return (
     <div className="space-y-8">
-      {/* Export Button */}
-      <div className="flex justify-end">
+      {/* Actions Bar */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={loadData}
+            disabled={loading}
+            className="px-4 py-2.5 rounded-xl bg-bg-card border border-border text-text-primary text-sm font-medium hover:bg-bg-card-hover transition-all disabled:opacity-50"
+          >
+            {loading ? '⏳ Loading...' : '🔄 Refresh Data'}
+          </button>
+          {lastRefresh && (
+            <span className="text-xs text-text-muted">
+              Updated {lastRefresh.toLocaleTimeString()}
+            </span>
+          )}
+        </div>
         <button
           onClick={() => exportDashboardPDF(assessments, departments, northStarTargets, tierDefinitions)}
           className="px-5 py-2.5 rounded-xl bg-accent-purple hover:bg-accent-purple/80 text-white text-sm font-medium transition-all"

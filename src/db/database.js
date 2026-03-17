@@ -109,15 +109,24 @@ export async function saveAssessment(data) {
     }
   }
 
-  // Cloud sync (fire-and-forget)
+  // Cloud sync (fire-and-forget, but store cloud ID for response linking)
+  let cloudId = null;
   if (getSupabaseConfig()) {
-    cloudSaveAssessment(record).catch(err => console.warn('[Cloud] Sync failed:', err));
+    try {
+      const cloudResult = await cloudSaveAssessment(record);
+      if (cloudResult?.id) {
+        cloudId = cloudResult.id;
+        console.log('[DB] Cloud assessment saved, cloud ID:', cloudId);
+      }
+    } catch (err) {
+      console.warn('[Cloud] Sync failed:', err);
+    }
   }
 
-  return { id: localId, anonymousId };
+  return { id: localId, anonymousId, cloudId };
 }
 
-export async function saveResponses(assessmentId, responses) {
+export async function saveResponses(assessmentId, responses, cloudAssessmentId = null) {
   await dbReady;
   const items = responses.map(r => ({ ...r, assessmentId }));
 
@@ -138,9 +147,9 @@ export async function saveResponses(assessmentId, responses) {
     }
   }
 
-  // Cloud sync (fire-and-forget)
-  if (getSupabaseConfig()) {
-    cloudSaveResponses(assessmentId, responses).catch(err => console.warn('[Cloud] Response sync failed:', err));
+  // Cloud sync — use the Supabase cloud ID (not local ID) for the FK reference
+  if (getSupabaseConfig() && cloudAssessmentId) {
+    cloudSaveResponses(cloudAssessmentId, responses).catch(err => console.warn('[Cloud] Response sync failed:', err));
   }
 }
 
@@ -297,6 +306,51 @@ export async function exportData() {
   const responses = getLSResponses();
   const anonymized = assessments.map(({ name, ...rest }) => rest);
   return { assessments: anonymized, responses, exportDate: new Date().toISOString(), version: 1 };
+}
+
+export async function getStorageDiagnostics() {
+  await dbReady;
+  const lsCount = getLSAssessments().length;
+  let idbCount = null;
+  let indexedDBOnly = 0;
+
+  if (idbAvailable) {
+    try {
+      const idbAssessments = await db.assessments.toArray();
+      idbCount = idbAssessments.length;
+
+      // Count how many are ONLY in IndexedDB (not in localStorage)
+      const lsAssessments = getLSAssessments();
+      const lsKeys = new Set(lsAssessments.map(a => `${a.anonymousId}_${a.timestamp}`));
+      indexedDBOnly = idbAssessments.filter(a => !lsKeys.has(`${a.anonymousId}_${a.timestamp}`)).length;
+
+      // If we found orphaned IDB data, migrate it now
+      if (indexedDBOnly > 0) {
+        const updatedLS = [...lsAssessments];
+        idbAssessments.forEach(a => {
+          const key = `${a.anonymousId}_${a.timestamp}`;
+          if (!lsKeys.has(key)) {
+            updatedLS.push(a);
+            lsKeys.add(key);
+          }
+        });
+        setLSAssessments(updatedLS);
+        console.log(`[DB] Diagnostics: migrated ${indexedDBOnly} orphaned IndexedDB assessments to localStorage`);
+      }
+    } catch (err) {
+      console.warn('[DB] Diagnostics IndexedDB read failed:', err);
+    }
+  }
+
+  // Get merged total (same logic as getAllAssessments)
+  const all = await getAllAssessments();
+
+  return {
+    localStorage: lsCount,
+    indexedDB: idbCount,
+    indexedDBOnly,
+    merged: all.length,
+  };
 }
 
 export async function importData(data) {
